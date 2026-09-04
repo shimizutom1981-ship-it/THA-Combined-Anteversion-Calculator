@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>THA カップ前捻角・透視投影像シミュレーター</title>
+  <title>THA 透視投影像・カップ前捻角</title>
   <style>
     :root {
       --primary: #1e40af;
@@ -14,8 +14,6 @@
       --text-muted: #94a3b8;
       --border: #334155;
       --accent: #38bdf8;
-      --ellipse-color: #38bdf8;
-      --axis-color: #ef4444;
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -132,7 +130,6 @@
       font-weight: 700;
       color: var(--accent);
     }
-    /* 透視ビュー */
     .viewer-panel {
       background-color: var(--panel-bg);
       border: 2px solid #334155;
@@ -222,18 +219,18 @@
       <span>Center Beam 垂直投影</span>
     </div>
     <svg id="fluoroSvg" viewBox="-120 -120 240 240">
-      <!-- 座標軸グリッド（写真同様） -->
+      <!-- 座標軸グリッド -->
       <line x1="-110" y1="0" x2="110" y2="0" stroke="#1e293b" stroke-width="1"/>
       <line x1="0" y1="-110" x2="0" y2="110" stroke="#1e293b" stroke-width="1"/>
       <circle cx="0" cy="0" r="100" fill="none" stroke="#1e293b" stroke-width="1" stroke-dasharray="2 2"/>
 
-      <!-- カップ半球背景（ドーム） -->
+      <!-- カップ半球背景（ドーム：上向き骨盤側） -->
       <path id="cupDome" fill="rgba(56, 189, 248, 0.15)" stroke="#0284c7" stroke-width="1.5" />
 
       <!-- 開口面楕円（フェイス） -->
       <ellipse id="cupEllipse" cx="0" cy="0" rx="90" ry="30" fill="rgba(56, 189, 248, 0.3)" stroke="#38bdf8" stroke-width="2.5" />
 
-      <!-- 長軸ライン（写真の赤線に相当） -->
+      <!-- 長軸ライン（赤線） -->
       <line id="majorAxisLine" x1="-90" y1="0" x2="90" y2="0" stroke="#ef4444" stroke-width="2" />
     </svg>
     <div class="meta-text" id="ellipseParams">長軸径: 90px | 短軸比: --</div>
@@ -269,47 +266,44 @@
     const deltaPT = parseFloat(ptInput.value) || 0;
     const inc = parseFloat(incInput.value) || 40;
 
-    // Widmer + 1/2ルール
+    // Widmer + 1/2ルール動態補正
     const vCup = 37.3 - (0.7 * vStem) - (deltaPT / 2.0);
     targetCupAnteDisp.textContent = vCup.toFixed(1);
 
-    // 幾何学的投影パラメータの計算
-    // 写真モデル: 前捻角(RA)により短軸比 b/a = sin(RA)
-    // 見かけの長軸傾斜角 θ: tan(θ) = tan(Inc) * cos(RA)
+    // 幾何学的投影パラメータ
     const incRad = inc * (Math.PI / 180.0);
     const anteRad = Math.max(0, vCup) * (Math.PI / 180.0);
 
     const a = 85; // 半径 (px)
     const b = a * Math.sin(anteRad); // 短軸半径
 
-    // 水平に対する見かけの傾斜角 (Apparent Inclination)
+    // 見かけの長軸傾斜角
     const tanApparent = Math.tan(incRad) * Math.cos(anteRad);
     const apparentIncDeg = Math.atan(tanApparent) * (180.0 / Math.PI);
     apparentIncDisp.textContent = apparentIncDeg.toFixed(1);
 
-    // SVG回転角: 右股関節は時計回り（右下がり）、左股関節は反時計回り（左下がり/右上がり）
+    // 右股関節：右下がり傾斜（正の回転）、左股関節：右上がり傾斜（負の回転）
     const rotAngle = currentSide === 'right' ? apparentIncDeg : -apparentIncDeg;
 
-    // 楕円属性の更新
+    // 開口面楕円
     cupEllipse.setAttribute('rx', a);
     cupEllipse.setAttribute('ry', Math.abs(b));
     cupEllipse.setAttribute('transform', `rotate(${rotAngle})`);
 
-    // 長軸ラインの更新
+    // 長軸ライン
     majorAxisLine.setAttribute('x1', -a);
     majorAxisLine.setAttribute('x2', a);
     majorAxisLine.setAttribute('y1', 0);
     majorAxisLine.setAttribute('y2', 0);
     majorAxisLine.setAttribute('transform', `rotate(${rotAngle})`);
 
-    // カップ半球ドーム（開口部反対側の上外側骨盤側）の描画
-    // 上外側に膨らむ円弧パス
-    const sweep = currentSide === 'right' ? 1 : 0;
-    const domePath = `M ${-a} 0 A ${a} ${a} 0 0 1 ${a} 0`;
+    // カップ半球ドーム（上外側・骨盤頭側向きに膨らむ半円）
+    // y < 0 方向へ向けて上向き円弧パスを作成
+    const domePath = `M ${-a} 0 A ${a} ${a} 0 0 1 ${a} 0 Z`;
     cupDome.setAttribute('d', domePath);
-    cupDome.setAttribute('transform', `rotate(${rotAngle + (currentSide === 'right' ? 180 : 180)})`);
+    cupDome.setAttribute('transform', `rotate(${rotAngle})`);
 
-    ellipseParamsDisp.textContent = `長軸比(短軸/長軸): ${(Math.sin(anteRad)).toFixed(2)} | 開口傾斜: ${rotAngle.toFixed(1)}°`;
+    ellipseParamsDisp.textContent = `長軸比(短軸/長軸): ${(Math.sin(anteRad)).toFixed(2)} | 開口長軸傾斜: ${rotAngle.toFixed(1)}°`;
   }
 
   stemInput.addEventListener('input', update);
