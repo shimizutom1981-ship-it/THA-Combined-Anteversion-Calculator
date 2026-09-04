@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>THA カップ前捻角計算ツール</title>
+  <style>
+    :root {
+      --primary: #1e40af;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --border: #cbd5e1;
+      --accent: #2563eb;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
+    .container {
+      background: var(--card-bg);
+      max-width: 480px;
+      width: 100%;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      font-size: 1.25rem;
+      margin-top: 0;
+      margin-bottom: 8px;
+      color: var(--primary);
+    }
+    p.subtitle {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-bottom: 20px;
+    }
+    .input-group {
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 6px;
+    }
+    .input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      outline: none;
+      box-sizing: border-box;
+    }
+    input[type="number"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+    .unit {
+      font-size: 0.9rem;
+      color: #64748b;
+      min-width: 20px;
+    }
+    .result-box {
+      margin-top: 24px;
+      padding: 16px;
+      background-color: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .result-label {
+      font-size: 0.85rem;
+      color: #1e40af;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .result-val {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .result-unit {
+      font-size: 1.2rem;
+      margin-left: 2px;
+    }
+    .formula-note {
+      margin-top: 20px;
+      font-size: 0.75rem;
+      color: #64748b;
+      line-height: 1.5;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>THA カップ前捻角計算</h1>
+  <p class="subtitle">Widmer理論 ＋ 骨盤動態補正（1/2ルール）</p>
+
+  <div class="input-group">
+    <label for="stemAnteversion">大腿骨頸部・ステム前捻角 (V_stem)</label>
+    <div class="input-wrapper">
+      <input type="number" id="stemAnteversion" step="0.5" value="15.0">
+      <span class="unit">°</span>
+    </div>
+  </div>
+
+  <div class="input-group">
+    <label for="deltaPT">骨盤後傾角変化量 (ΔPT: 臥位→立位)</label>
+    <div class="input-wrapper">
+      <input type="number" id="deltaPT" step="0.5" value="10.0">
+      <span class="unit">°</span>
+    </div>
+  </div>
+
+  <div class="result-box">
+    <div class="result-label">目標カップ前方開角 (V_cup)</div>
+    <div class="result-val">
+      <span id="cupAnteversion">--</span><span class="result-unit">°</span>
+    </div>
+  </div>
+
+  <div class="formula-note">
+    <strong>計算式:</strong><br>
+    V_cup = 37.3° - (0.7 × V_stem) - (ΔPT / 2)<br>
+    ※ 骨盤後傾（ΔPT）による立位でのカップ前方開大・前方脱臼・エッジローディングを防ぐ動態補正を含みます。
+  </div>
+</div>
+
+<script>
+  const stemInput = document.getElementById('stemAnteversion');
+  const ptInput = document.getElementById('deltaPT');
+  const resultDisplay = document.getElementById('cupAnteversion');
+
+  function calculate() {
+    const vStem = parseFloat(stemInput.value);
+    const deltaPT = parseFloat(ptInput.value);
+
+    if (isNaN(vStem) || isNaN(deltaPT)) {
+      resultDisplay.textContent = '--';
+      return;
+    }
+
+    // Widmer式 + 1/2ルール動態補正
+    const vCup = 37.3 - (0.7 * vStem) - (deltaPT / 2.0);
+    resultDisplay.textContent = vCup.toFixed(1);
+  }
+
+  stemInput.addEventListener('input', calculate);
+  ptInput.addEventListener('input', calculate);
+
+  calculate();
+</script>
+
+</body>
+</html>
