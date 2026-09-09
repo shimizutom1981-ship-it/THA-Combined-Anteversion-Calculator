@@ -14,6 +14,9 @@
       --text-muted: #94a3b8;
       --border: #334155;
       --accent: #38bdf8;
+      --ref-line: #10b981; /* 基準水平線：緑 */
+      --major-line: #ef4444; /* 長軸：赤 */
+      --minor-line: #38bdf8; /* 短軸：青 */
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -190,7 +193,7 @@
       align-items: center;
       min-height: 280px;
       border: 1px solid var(--border);
-      touch-action: none; /* スマホでのドラッグスクロール抑止 */
+      touch-action: none;
     }
     canvas {
       max-width: 100%;
@@ -235,7 +238,7 @@
 
 <div class="container">
   <h1>THA カップ設置角・透視写真計測</h1>
-  <p class="subtitle">Widmer理論 ＋ 骨盤動態補正 ＋ 点ドラッグ微調整計測</p>
+  <p class="subtitle">基準水平線補正 ＋ 楕円幾何計測 ＋ 動態シミュレーター</p>
 
   <div class="tab-container">
     <button class="tab-btn active" onclick="switchTab('measure')">📷 写真から角度計測</button>
@@ -254,7 +257,7 @@
       </div>
 
       <div class="step-guide" id="guideText">
-        1. <strong>長軸の端点 A</strong> をタップしてください
+        1. <strong>基準水平線の端点 H1</strong>（涙滴や骨盤ランドマーク）をタップ
       </div>
 
       <div class="canvas-container">
@@ -263,16 +266,17 @@
 
       <div class="results-row">
         <div class="res-box">
-          <div class="res-title">実測 傾斜角 (Apparent Inc)</div>
+          <div class="res-title">基準補正 外方傾斜角 (RI)</div>
           <div class="res-val"><span id="measuredInc">--</span><span style="font-size:1rem;">°</span></div>
         </div>
         <div class="res-box">
-          <div class="res-title">実測 前捻角 (Liaw/Widmer RA)</div>
+          <div class="res-title">実測 前捻角 (RA / Liaw)</div>
           <div class="res-val"><span id="measuredAnte">--</span><span style="font-size:1rem;">°</span></div>
         </div>
       </div>
       <div style="font-size:0.75rem; color:var(--text-muted); text-align:center;">
-        ※ 4点打点後、各ポイント（A/B/C/D）を指やマウスでドラッグして微調整できます。
+        ※ 緑：基準水平線(H1-H2) | 赤：カップ長軸(A-B) | 青：カップ短軸(C-D)<br>
+        全点タップ完了後、各点をドラッグして自由に微調整できます。
       </div>
     </div>
   </div>
@@ -307,7 +311,7 @@
         </div>
       </div>
       <div class="input-group">
-        <label>補正モデル</label>
+        <label>動態補正モデル</label>
         <div class="input-wrapper">
           <input type="text" value="Widmer - ΔPT/2" disabled style="color:#94a3b8; border:none; background:transparent;">
         </div>
@@ -366,10 +370,18 @@
   const measuredAnteDisp = document.getElementById('measuredAnte');
 
   let img = new Image();
-  let points = []; // [{x, y, label}]
+  // 6点: [H1, H2 (基準水平線), A, B (カップ長軸), C, D (カップ短軸)]
+  let points = [];
   let draggingIdx = -1;
-  const labels = ['A', 'B', 'C', 'D'];
-  const HIT_RADIUS = 28; // タッチ判定半径(px)
+  const pointMeta = [
+    { label: 'H1', color: '#10b981' },
+    { label: 'H2', color: '#10b981' },
+    { label: 'A',  color: '#ef4444' },
+    { label: 'B',  color: '#ef4444' },
+    { label: 'C',  color: '#38bdf8' },
+    { label: 'D',  color: '#38bdf8' }
+  ];
+  const HIT_RADIUS = 28;
 
   fileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
@@ -396,10 +408,21 @@
   function resetPoints() {
     points = [];
     draggingIdx = -1;
-    guideText.innerHTML = '1. <strong>長軸の端点 A</strong> をタップしてください';
+    updateGuide();
     measuredIncDisp.textContent = '--';
     measuredAnteDisp.textContent = '--';
     redraw();
+  }
+
+  function updateGuide() {
+    const count = points.length;
+    if (count === 0) guideText.innerHTML = '1. <strong>基準水平線の端点 H1</strong>（涙滴線等）をタップ';
+    else if (count === 1) guideText.innerHTML = '2. <strong>基準水平線の反対側 H2</strong> をタップ';
+    else if (count === 2) guideText.innerHTML = '3. <strong>カップ長軸の端点 A</strong> をタップ';
+    else if (count === 3) guideText.innerHTML = '4. <strong>カップ長軸の反対側 B</strong> をタップ';
+    else if (count === 4) guideText.innerHTML = '5. <strong>カップ短軸の端点 C</strong> をタップ';
+    else if (count === 5) guideText.innerHTML = '6. <strong>カップ短軸の反対側 D</strong> をタップ';
+    else guideText.innerHTML = '✅ <strong>計測完了</strong>（各点 H1,H2,A,B,C,D をドラッグして微調整可）';
   }
 
   function getCanvasCoords(e) {
@@ -412,12 +435,11 @@
     };
   }
 
-  // ポインター押下（タップ・ドラッグ開始）
   function handleStart(e) {
     if (!img.src) return;
     const pos = getCanvasCoords(e);
 
-    // 既に打点済みの点に近いか判定（ドラッグ微調整モード）
+    // 既存ポイントのドラッグ判定
     let nearestIdx = -1;
     let minDist = HIT_RADIUS;
     for (let i = 0; i < points.length; i++) {
@@ -433,37 +455,29 @@
       return;
     }
 
-    // 4点未満なら新規打点
-    if (points.length < 4) {
-      points.push({ x: pos.x, y: pos.y, label: labels[points.length] });
-      if (points.length === 1) {
-        guideText.innerHTML = '2. <strong>長軸の反対の端点 B</strong> をタップしてください';
-      } else if (points.length === 2) {
-        guideText.innerHTML = '3. <strong>短軸の端点 C</strong> をタップしてください';
-      } else if (points.length === 3) {
-        guideText.innerHTML = '4. <strong>短軸の反対の端点 D</strong> をタップしてください';
-      } else if (points.length === 4) {
-        guideText.innerHTML = '✅ <strong>計測完了</strong>（各点 A,B,C,D をドラッグして微調整できます）';
+    // 6点未満の新規打点
+    if (points.length < 6) {
+      points.push({ x: pos.x, y: pos.y });
+      updateGuide();
+      if (points.length === 6) {
         calculateMeasuredAngles();
       }
       redraw();
     }
   }
 
-  // ポインター移動（ドラッグ中）
   function handleMove(e) {
     if (draggingIdx === -1) return;
     if (e.cancelable) e.preventDefault();
     const pos = getCanvasCoords(e);
     points[draggingIdx].x = Math.max(0, Math.min(canvas.width, pos.x));
     points[draggingIdx].y = Math.max(0, Math.min(canvas.height, pos.y));
-    if (points.length === 4) {
+    if (points.length === 6) {
       calculateMeasuredAngles();
     }
     redraw();
   }
 
-  // ポインター解放
   function handleEnd() {
     draggingIdx = -1;
   }
@@ -489,31 +503,52 @@
       ctx.fillText("写真を撮影または選択してください", canvas.width / 2, canvas.height / 2);
     }
 
-    // 長軸ライン (A-B)
+    // 基準水平線 (H1 - H2) : 緑線＋無限延長線ガイド
     if (points.length >= 2) {
-      ctx.strokeStyle = "#ef4444";
+      ctx.strokeStyle = "#10b981";
       ctx.lineWidth = 2.5;
       ctx.beginPath();
       ctx.moveTo(points[0].x, points[0].y);
       ctx.lineTo(points[1].x, points[1].y);
       ctx.stroke();
+
+      // 延長補助線（点線）
+      const dxH = points[1].x - points[0].x;
+      const dyH = points[1].y - points[0].y;
+      ctx.strokeStyle = "rgba(16, 185, 129, 0.4)";
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(points[0].x - dxH * 2, points[0].y - dyH * 2);
+      ctx.lineTo(points[1].x + dxH * 2, points[1].y + dyH * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
     }
 
-    // 短軸ライン (C-D)
-    if (points.length === 4) {
-      ctx.strokeStyle = "#38bdf8";
+    // カップ長軸ライン (A - B) : 赤線
+    if (points.length >= 4) {
+      ctx.strokeStyle = "#ef4444";
       ctx.lineWidth = 2.5;
       ctx.beginPath();
       ctx.moveTo(points[2].x, points[2].y);
       ctx.lineTo(points[3].x, points[3].y);
       ctx.stroke();
+    }
 
-      // フィッティング楕円のリアルタイム描画
-      const midX = (points[0].x + points[1].x) / 2;
-      const midY = (points[0].y + points[1].y) / 2;
-      const majorLen = Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y);
-      const minorLen = Math.hypot(points[3].x - points[2].x, points[3].y - points[2].y);
-      const angle = Math.atan2(points[1].y - points[0].y, points[1].x - points[0].x);
+    // カップ短軸ライン (C - D) : 青線 & フィッティング楕円
+    if (points.length === 6) {
+      ctx.strokeStyle = "#38bdf8";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(points[4].x, points[4].y);
+      ctx.lineTo(points[5].x, points[5].y);
+      ctx.stroke();
+
+      const midX = (points[2].x + points[3].x) / 2;
+      const midY = (points[2].y + points[3].y) / 2;
+      const majorLen = Math.hypot(points[3].x - points[2].x, points[3].y - points[2].y);
+      const minorLen = Math.hypot(points[5].x - points[4].x, points[5].y - points[4].y);
+      const angle = Math.atan2(points[3].y - points[2].y, points[3].x - points[2].x);
 
       ctx.save();
       ctx.translate(midX, midY);
@@ -527,10 +562,10 @@
       ctx.restore();
     }
 
-    // 点マークおよびラベル (A, B, C, D)
+    // 各点マーカー
     points.forEach((p, idx) => {
-      const isMajor = idx < 2;
-      ctx.fillStyle = isMajor ? "#ef4444" : "#38bdf8";
+      const meta = pointMeta[idx];
+      ctx.fillStyle = meta.color;
       ctx.beginPath();
       ctx.arc(p.x, p.y, idx === draggingIdx ? 10 : 7, 0, Math.PI * 2);
       ctx.fill();
@@ -538,35 +573,41 @@
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // ラベルテキスト描画
       ctx.fillStyle = "#ffffff";
       ctx.font = "bold 12px sans-serif";
-      ctx.fillText(labels[idx], p.x + 10, p.y - 10);
+      ctx.fillText(meta.label, p.x + 10, p.y - 10);
     });
   }
 
   function calculateMeasuredAngles() {
-    const pA = points[0];
-    const pB = points[1];
-    const pC = points[2];
-    const pD = points[3];
+    const pH1 = points[0];
+    const pH2 = points[1];
+    const pA  = points[2];
+    const pB  = points[3];
+    const pC  = points[4];
+    const pD  = points[5];
 
+    // 基準水平線の角度
+    const angleRef = Math.atan2(pH2.y - pH1.y, pH2.x - pH1.x);
+
+    // カップ長軸の角度
+    const angleCup = Math.atan2(pB.y - pA.y, pB.x - pA.x);
+
+    // 基準線に対する相対傾斜角 (Radiographic Inclination: RI)
+    let deltaAngle = Math.abs(angleCup - angleRef) * (180.0 / Math.PI);
+    if (deltaAngle > 90) deltaAngle = 180 - deltaAngle;
+
+    // 前捻角 (Liaw/Widmer法: sin(RA) = minorLen / majorLen)
     const majorLen = Math.hypot(pB.x - pA.x, pB.y - pA.y);
     const minorLen = Math.hypot(pD.x - pC.x, pD.y - pC.y);
 
-    if (majorLen <= 0) return;
+    if (majorLen > 0) {
+      const ratio = Math.min(1.0, minorLen / majorLen);
+      const anteDeg = Math.asin(ratio) * (180.0 / Math.PI);
+      measuredAnteDisp.textContent = anteDeg.toFixed(1);
+    }
 
-    // 水平線に対する傾斜角
-    const dx = Math.abs(pB.x - pA.x);
-    const dy = Math.abs(pB.y - pA.y);
-    const incDeg = Math.atan2(dy, dx) * (180.0 / Math.PI);
-
-    // Liaw / Widmer法: sin(RA) = b / a = minorLen / majorLen
-    const ratio = Math.min(1.0, minorLen / majorLen);
-    const anteDeg = Math.asin(ratio) * (180.0 / Math.PI);
-
-    measuredIncDisp.textContent = incDeg.toFixed(1);
-    measuredAnteDisp.textContent = anteDeg.toFixed(1);
+    measuredIncDisp.textContent = deltaAngle.toFixed(1);
   }
 
   // --- 目標値幾何シミュレータロジック ---
