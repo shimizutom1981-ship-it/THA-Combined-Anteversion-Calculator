@@ -1,53 +1,101 @@
-# THA Combined Anteversion Calculator
-（骨盤動態補正対応 人工股関節全置換術 カップ目標前捻角計算ツール）
+THA Combined Anteversion Calculator
+（画像計測＆骨盤動態補正対応 人工股関節全置換術 カップ目標前捻角計算ツール）
 
-人工股関節全置換術（THA）における術前計画および術中判断をサポートするためのWebベース計算ツールです。  
-大腿骨ステム前捻角（$V_{stem}$）と骨盤傾斜変化（$\Delta PT$）をもとに、立位・機能的肢位でのインピンジメントや脱臼リスクを低減するための目標カップ前捻角（$V_{cup}$）を即座に算出します。
+人工股関節全置換術（THA）における術前計画および術中判断をサポートするためのWebベース計算ツールです。
+大腿骨ステム前捻角（V 
+stem
+​
+ ）と骨盤傾斜変化（ΔPT）をもとに、立位・機能的肢位でのインピンジメントや脱臼リスクを低減するための目標カップ前捻角（V 
+cup
+​
+ ）を即座に算出します。
 
----
+術中透視画像やX線・CTの画像を取り込み、ブラウザ上で直接ステム前捻角などの角度計測を行う機能も備えています。
 
-## 主な機能
-- **Widmerの理論式に基づくCombined Anteversion（CA）算出**
-- **骨盤動態（Spinopelvic mobility）を考慮した動的補正（$\Delta PT / 2$ ルール）**
-- **ブラウザ完結型**：PC・スマートフォンのブラウザ上で瞬時に動作（外部サーバーへのデータ送信なし）
+主な機能
+画像読み込み・オンスクリーン角度計測
+術中写真、透視画像、術前・術後X線画像などをブラウザ上に読み込み、ドラッグ操作（3点指定 / 2直線交差など）で直接ステム前捻角や骨盤傾斜角を計測可能。外部ソフト不要で即座に計算へ反映できます。
 
----
+クライアントサイド完結・高セキュリティ
+画像処理や角度計算はすべて端末のブラウザ内で完結します。画像データやパラメータが外部サーバーへ送信・保存されることは一切ありません。
 
-## 計算ロジック・アルゴリズム
+Widmerの理論式に基づくCombined Anteversion（CA）算出
+Widmerらの提唱する安全域（Safe Zone）理論に基づき、大腿骨側・臼蓋側の最適な連動アライメントを導出。
 
-### 1. Widmer's Safe Zone 理論
+骨盤動態（Spinopelvic mobility）を考慮した動的補正（ΔPT/2 ルール）
+臥位から立位への骨盤傾斜変化に伴う機能的前捻角の変動をあらかじめ織り込んだ目標設置角を提示。
+
+レスポンシブUI
+手術室内のタブレット・スマートフォン端末やPCのブラウザからスムーズに利用可能。
+
+計算ロジック・アルゴリズム
+1. Widmer's Safe Zone 理論
 Widmerらが提唱したカップ傾斜角・前捻角およびステム前捻角の連動関係に基づき、目標となる基準前捻角を定義しています。
 
-$$\text{目標 CA} = V_{cup} + 0.7 \times V_{stem} \approx 37.3^\circ$$
+目標 CA=V 
+cup
+​
+ +0.7×V 
+stem
+​
+ ≈37.3 
+∘
+ 
+2. 骨盤動態補正（ΔPT/2）
+臥位から立位への姿勢変化に伴い骨盤が後傾すると、カップの見かけの前捻角（機能的前捻角）が増大し、前方開大による前方脱臼やエッジローディングのリスクが高まります。
+骨盤後傾角変化量（ΔPT）の約半分がカップ機能的前捻角に影響するという知見に基づき、以下の補正を行います。
 
-### 2. 骨盤動態補正（$\Delta PT / 2$）
-臥位から立位への姿勢変化に伴い骨盤が後傾すると、カップの見かけの前捻角（機能的前捻角）が増大し、前方開大による前方脱臼やエッジローディングのリスクが高まります。  
-骨盤後傾角変化量（$\Delta PT$）の約半分がカップ機能的前捻角に影響するという知見に基づき、以下の補正を行っています。
+V 
+cup
+​
+  (target)=37.3 
+∘
+ −(0.7×V 
+stem
+​
+ )− 
+2
+ΔPT
+​
+ 
+※ 設定する目標Combined Anteversionの基準値や補正係数は、術前アライメントや骨盤可動性分類（Stiff spine / Hypermobile等）に応じて臨床的に適宜微調整してください。
 
-$$V_{cup\text{ (target)}} = 37.3^\circ - (0.7 \times V_{stem}) - \frac{\Delta PT}{2}$$
+使用手順
+数値の直接入力または画像計測
 
-*※ 設定する目標Combined Anteversionの基準値や補正係数は、術前アライメントや骨盤可動性分類（Stiff spine / Hypermobile等）に応じて臨床的に適宜微調整してください。*
+直接数値を入力するか、または「画像選択 / ドロップ」エリアから術中写真・透視画像を読み込みます。
 
----
+画像上でポイントを指定して角度を計測すると、入力欄に自動反映されます。
 
-## 入力パラメータの定義
+骨盤後傾変化量（ΔPT）の入力
 
-| パラメータ | 説明 | 備考 |
-| :--- | :--- | :--- |
-| **$V_{stem}$** | ステム前捻角（度） | 3D-CT術前計画値、または術中大腿骨計測値 |
-| **$\Delta PT$** | 骨盤後傾変化量（度） | 臥位から立位での骨盤傾斜角（PT）の変化量（後傾方向をプラス） |
+術前立位・臥位X線等から得られた骨盤傾斜角の変化量を入力します（後傾方向をプラス）。
 
----
+計算結果の確認
 
-## 参考文献
-1. Widmer KH, Zurfluh B. *Compliant positioning of implants in total hip arthroplasty to maintain impingement-free range of motion.* J Orthop Res. 2004;22(4):815-821.
-2. Phan D, Bedair HS, Schwarzkopf R. *The Influence of Sagittal Spinal Deformity on Anteversion of the Acetabular Component in Total Hip Arthroplasty.* Bone Joint J. 2015;97-B(8):1017-1023.
-3. Vigdorchik JM, et al. *The spinopelvic relationship in total hip arthroplasty.* Bone Joint J. 2020;102-B(6_Supple_A):4-11.
+Widmer式および骨盤動態補正を加味した「目標カップ前捻角」がリアルタイムに算出・表示されます。
 
----
+入力パラメータの定義
+パラメータ	説明	備考
+V 
+stem
+​
+ 	ステム前捻角（度）	3D-CT術前計画値、術中計測値、または画像計測機能による実測値
+ΔPT	骨盤後傾変化量（度）	臥位から立位での骨盤傾斜角（PT）の変化量（後傾方向をプラス）
+参考文献
+Widmer KH, Zurfluh B. Compliant positioning of implants in total hip arthroplasty to maintain impingement-free range of motion. J Orthop Res. 2004;22(4):815-821.   
 
-## 免責事項（Medical Disclaimer）
-- 本ツールは、人工股関節全置換術におけるインプラント設置計画の**補助・検討を目的としたものであり、医療機器ではありません**。
-- 計算結果は理論値に基づくシミュレーションであり、個々の骨形態、脊椎アライメント、軟部組織の緊張度、インプラントデザイン（ヘッド径やネック形状など）により至適角度は異なります。
-- 最終的なインプラント設置角度の決定および手術方針は、**必ず執刀医の臨床的判断と責任において行ってください**。
-- 本ツールの利用により生じたいかなる損害・合併症についても、開発者は一切の責任を負いかねます。# THA-Combined-Anteversion-Calculator
+Phan D, Bedair HS, Schwarzkopf R. The Influence of Sagittal Spinal Deformity on Anteversion of the Acetabular Component in Total Hip Arthroplasty. Bone Joint J. 2015;97-B(8):1017-1023.   
+
+Vigdorchik JM, et al. The spinopelvic relationship in total hip arthroplasty. Bone Joint J. 2020;102-B(6_Supple_A):4-11.   
+
+免責事項（Medical Disclaimer）
+本ツールは、人工股関節全置換術におけるインプラント設置計画の補助・検討を目的としたものであり、医療機器ではありません。
+
+画像計測機能の精度は、撮影時の視差、インプラントの投影角度、マーカー設置精度等に依存します。
+
+計算結果は理論値に基づくシミュレーションであり、個々の骨形態、脊椎アライメント、軟部組織の緊張度、インプラントデザイン（ヘッド径やネック形状など）により至適角度は異なります。
+
+最終的なインプラント設置角度の決定および手術方針は、必ず執刀医の臨床的判断と責任において行ってください。
+
+本ツールの利用により生じたいかなる損害・合併症についても、開発者は一切の責任を負いかねます。
