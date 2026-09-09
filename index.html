@@ -14,9 +14,6 @@
       --text-muted: #94a3b8;
       --border: #334155;
       --accent: #38bdf8;
-      --ref-line: #10b981; /* 基準水平線：緑 */
-      --major-line: #ef4444; /* 長軸：赤 */
-      --minor-line: #38bdf8; /* 短軸：青 */
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -163,12 +160,14 @@
     .file-input-wrapper {
       display: flex;
       gap: 8px;
+      flex-wrap: wrap;
     }
     .file-input-wrapper input[type="file"] {
       display: none;
     }
     .btn-action {
-      flex: 1;
+      flex: 2;
+      min-width: 140px;
       padding: 10px;
       background-color: var(--accent);
       color: #0f172a;
@@ -179,8 +178,34 @@
       border: none;
     }
     .btn-reset {
+      flex: 1;
       background-color: #475569;
       color: #fff;
+    }
+    /* ズームコントローラー */
+    .zoom-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #0f172a;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+    .zoom-btn {
+      background: #334155;
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .zoom-info {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-left: auto;
     }
     .canvas-container {
       position: relative;
@@ -238,7 +263,7 @@
 
 <div class="container">
   <h1>THA カップ設置角・透視写真計測</h1>
-  <p class="subtitle">基準水平線補正 ＋ 楕円幾何計測 ＋ 動態シミュレーター</p>
+  <p class="subtitle">拡大ズーム ＋ 基準線補正 ＋ 楕円幾何計測</p>
 
   <div class="tab-container">
     <button class="tab-btn active" onclick="switchTab('measure')">📷 写真から角度計測</button>
@@ -253,11 +278,19 @@
           📸 透視写真を撮影 / 選択
         </label>
         <input type="file" id="cameraInput" accept="image/*">
-        <button class="btn-action btn-reset" type="button" onclick="resetPoints()">やり直す</button>
+        <button class="btn-action btn-reset" type="button" onclick="resetPoints()">点リセット</button>
+      </div>
+
+      <!-- ズーム操作バー -->
+      <div class="zoom-controls">
+        <button class="zoom-btn" type="button" onclick="adjustZoom(1.25)">＋ 拡大</button>
+        <button class="zoom-btn" type="button" onclick="adjustZoom(0.8)">－ 縮小</button>
+        <button class="zoom-btn" type="button" onclick="resetZoom()">リセット</button>
+        <span class="zoom-info" id="zoomLevel">倍率: 1.0x (2本指でピンチ・移動可)</span>
       </div>
 
       <div class="step-guide" id="guideText">
-        1. <strong>基準水平線の端点 H1</strong>（涙滴や骨盤ランドマーク）をタップ
+        1. <strong>基準水平線の端点 H1</strong>（涙滴線等）をタップ
       </div>
 
       <div class="canvas-container">
@@ -275,8 +308,8 @@
         </div>
       </div>
       <div style="font-size:0.75rem; color:var(--text-muted); text-align:center;">
-        ※ 緑：基準水平線(H1-H2) | 赤：カップ長軸(A-B) | 青：カップ短軸(C-D)<br>
-        全点タップ完了後、各点をドラッグして自由に微調整できます。
+        ※ 緑：基準線(H1-H2) | 赤：長軸(A-B) | 青：短軸(C-D)<br>
+        2本指でピンチ拡大・移動、1本指で打点・ドラッグ微調整が可能です。
       </div>
     </div>
   </div>
@@ -361,17 +394,17 @@
     }
   }
 
-  // --- 写真計測ロジック ---
+  // --- 写真計測 ＆ ズーム・パン機構 ---
   const fileInput = document.getElementById('cameraInput');
   const canvas = document.getElementById('photoCanvas');
   const ctx = canvas.getContext('2d');
   const guideText = document.getElementById('guideText');
+  const zoomLevelDisp = document.getElementById('zoomLevel');
   const measuredIncDisp = document.getElementById('measuredInc');
   const measuredAnteDisp = document.getElementById('measuredAnte');
 
   let img = new Image();
-  // 6点: [H1, H2 (基準水平線), A, B (カップ長軸), C, D (カップ短軸)]
-  let points = [];
+  let points = []; // 画像座標系における6点
   let draggingIdx = -1;
   const pointMeta = [
     { label: 'H1', color: '#10b981' },
@@ -381,7 +414,16 @@
     { label: 'C',  color: '#38bdf8' },
     { label: 'D',  color: '#38bdf8' }
   ];
-  const HIT_RADIUS = 28;
+
+  // ズーム・パン状態
+  let scale = 1.0;
+  let panX = 0;
+  let panY = 0;
+  let isPanning = false;
+  let startPanX = 0;
+  let startPanY = 0;
+  let initialPinchDist = null;
+  let initialScale = 1.0;
 
   fileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
@@ -391,6 +433,7 @@
       img.onload = () => {
         setupCanvas();
         resetPoints();
+        resetZoom();
       };
       img.src = event.target.result;
     };
@@ -399,9 +442,9 @@
 
   function setupCanvas() {
     const maxW = 540;
-    const scale = Math.min(1, maxW / img.width);
-    canvas.width = img.width * scale;
-    canvas.height = img.height * scale;
+    const s = Math.min(1, maxW / img.width);
+    canvas.width = img.width * s;
+    canvas.height = img.height * s;
     redraw();
   }
 
@@ -414,36 +457,81 @@
     redraw();
   }
 
-  function updateGuide() {
-    const count = points.length;
-    if (count === 0) guideText.innerHTML = '1. <strong>基準水平線の端点 H1</strong>（涙滴線等）をタップ';
-    else if (count === 1) guideText.innerHTML = '2. <strong>基準水平線の反対側 H2</strong> をタップ';
-    else if (count === 2) guideText.innerHTML = '3. <strong>カップ長軸の端点 A</strong> をタップ';
-    else if (count === 3) guideText.innerHTML = '4. <strong>カップ長軸の反対側 B</strong> をタップ';
-    else if (count === 4) guideText.innerHTML = '5. <strong>カップ短軸の端点 C</strong> をタップ';
-    else if (count === 5) guideText.innerHTML = '6. <strong>カップ短軸の反対側 D</strong> をタップ';
-    else guideText.innerHTML = '✅ <strong>計測完了</strong>（各点 H1,H2,A,B,C,D をドラッグして微調整可）';
+  function adjustZoom(factor) {
+    const newScale = Math.min(Math.max(1.0, scale * factor), 5.0);
+    // 画面中央を基準に拡大縮小
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    panX = cx - (cx - panX) * (newScale / scale);
+    panY = cy - (cy - panY) * (newScale / scale);
+    scale = newScale;
+    clampPan();
+    updateZoomDisplay();
+    redraw();
   }
 
-  function getCanvasCoords(e) {
+  function resetZoom() {
+    scale = 1.0;
+    panX = 0;
+    panY = 0;
+    updateZoomDisplay();
+    redraw();
+  }
+
+  function updateZoomDisplay() {
+    zoomLevelDisp.textContent = `倍率: ${scale.toFixed(1)}x`;
+  }
+
+  function clampPan() {
+    const minX = canvas.width * (1 - scale);
+    const minY = canvas.height * (1 - scale);
+    panX = Math.min(0, Math.max(minX, panX));
+    panY = Math.min(0, Math.max(minY, panY));
+  }
+
+  // キャンバス上の表示座標 -> 画像内部の仮想座標
+  function screenToImgCoords(screenX, screenY) {
+    return {
+      x: (screenX - panX) / scale,
+      y: (screenY - panY) / scale
+    };
+  }
+
+  function getEventPos(e) {
     const rect = canvas.getBoundingClientRect();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     return {
-      x: (clientX - rect.left) * (canvas.width / rect.width),
-      y: (clientY - rect.top) * (canvas.height / rect.height)
+      sx: (clientX - rect.left) * (canvas.width / rect.width),
+      sy: (clientY - rect.top) * (canvas.height / rect.height)
     };
   }
 
   function handleStart(e) {
     if (!img.src) return;
-    const pos = getCanvasCoords(e);
 
-    // 既存ポイントのドラッグ判定
+    // 2本指タッチ：ピンチズーム・パン開始
+    if (e.touches && e.touches.length === 2) {
+      isPanning = true;
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      initialPinchDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+      initialScale = scale;
+      startPanX = (t1.clientX + t2.clientX) / 2 - panX;
+      startPanY = (t1.clientY + t2.clientY) / 2 - panY;
+      return;
+    }
+
+    const { sx, sy } = getEventPos(e);
+    const pos = screenToImgCoords(sx, sy);
+
+    // 既存点のドラッグ微調整判定（画面上の距離で判定）
     let nearestIdx = -1;
-    let minDist = HIT_RADIUS;
+    let minDist = 30; // 画面ピクセル基準
     for (let i = 0; i < points.length; i++) {
-      const d = Math.hypot(points[i].x - pos.x, points[i].y - pos.y);
+      const pScreenX = points[i].x * scale + panX;
+      const pScreenY = points[i].y * scale + panY;
+      const d = Math.hypot(pScreenX - sx, pScreenY - sy);
       if (d < minDist) {
         minDist = d;
         nearestIdx = i;
@@ -455,7 +543,7 @@
       return;
     }
 
-    // 6点未満の新規打点
+    // 新規打点
     if (points.length < 6) {
       points.push({ x: pos.x, y: pos.y });
       updateGuide();
@@ -467,20 +555,52 @@
   }
 
   function handleMove(e) {
-    if (draggingIdx === -1) return;
     if (e.cancelable) e.preventDefault();
-    const pos = getCanvasCoords(e);
-    points[draggingIdx].x = Math.max(0, Math.min(canvas.width, pos.x));
-    points[draggingIdx].y = Math.max(0, Math.min(canvas.height, pos.y));
-    if (points.length === 6) {
-      calculateMeasuredAngles();
+
+    // 2本指操作：ピンチ＆パン
+    if (e.touches && e.touches.length === 2 && isPanning) {
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+      if (initialPinchDist) {
+        const factor = dist / initialPinchDist;
+        scale = Math.min(Math.max(1.0, initialScale * factor), 5.0);
+        updateZoomDisplay();
+      }
+      const midX = (t1.clientX + t2.clientX) / 2;
+      const midY = (t1.clientY + t2.clientY) / 2;
+      panX = midX - startPanX;
+      panY = midY - startPanY;
+      clampPan();
+      redraw();
+      return;
     }
-    redraw();
+
+    // 1本指操作：点のドラッグ微調整
+    if (draggingIdx !== -1) {
+      const { sx, sy } = getEventPos(e);
+      const pos = screenToImgCoords(sx, sy);
+      points[draggingIdx].x = Math.max(0, Math.min(canvas.width, pos.x));
+      points[draggingIdx].y = Math.max(0, Math.min(canvas.height, pos.y));
+      if (points.length === 6) {
+        calculateMeasuredAngles();
+      }
+      redraw();
+    }
   }
 
   function handleEnd() {
     draggingIdx = -1;
+    isPanning = false;
+    initialPinchDist = null;
   }
+
+  // マウスホイールでのズーム対応
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.15 : 0.85;
+    adjustZoom(factor);
+  }, { passive: false });
 
   canvas.addEventListener('mousedown', handleStart);
   canvas.addEventListener('mousemove', handleMove);
@@ -490,8 +610,25 @@
   canvas.addEventListener('touchmove', handleMove, { passive: false });
   window.addEventListener('touchend', handleEnd);
 
+  function updateGuide() {
+    const count = points.length;
+    if (count === 0) guideText.innerHTML = '1. <strong>基準水平線の端点 H1</strong>（涙滴線等）をタップ';
+    else if (count === 1) guideText.innerHTML = '2. <strong>基準水平線の反対側 H2</strong> をタップ';
+    else if (count === 2) guideText.innerHTML = '3. <strong>カップ長軸の端点 A</strong> をタップ';
+    else if (count === 3) guideText.innerHTML = '4. <strong>カップ長軸の反対側 B</strong> をタップ';
+    else if (count === 4) guideText.innerHTML = '5. <strong>カップ短軸の端点 C</strong> をタップ';
+    else if (count === 5) guideText.innerHTML = '6. <strong>カップ短軸の反対側 D</strong> をタップ';
+    else guideText.innerHTML = '✅ <strong>計測完了</strong>（各点をドラッグ微調整可）';
+  }
+
   function redraw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.save();
+    // ズーム・パントランスフォーム適用
+    ctx.translate(panX, panY);
+    ctx.scale(scale, scale);
+
     if (img.src) {
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     } else {
@@ -503,21 +640,20 @@
       ctx.fillText("写真を撮影または選択してください", canvas.width / 2, canvas.height / 2);
     }
 
-    // 基準水平線 (H1 - H2) : 緑線＋無限延長線ガイド
+    // 基準水平線 (H1 - H2)
     if (points.length >= 2) {
       ctx.strokeStyle = "#10b981";
-      ctx.lineWidth = 2.5;
+      ctx.lineWidth = 2.5 / scale;
       ctx.beginPath();
       ctx.moveTo(points[0].x, points[0].y);
       ctx.lineTo(points[1].x, points[1].y);
       ctx.stroke();
 
-      // 延長補助線（点線）
       const dxH = points[1].x - points[0].x;
       const dyH = points[1].y - points[0].y;
       ctx.strokeStyle = "rgba(16, 185, 129, 0.4)";
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([4, 4]);
+      ctx.lineWidth = 1.5 / scale;
+      ctx.setLineDash([4 / scale, 4 / scale]);
       ctx.beginPath();
       ctx.moveTo(points[0].x - dxH * 2, points[0].y - dyH * 2);
       ctx.lineTo(points[1].x + dxH * 2, points[1].y + dyH * 2);
@@ -525,20 +661,20 @@
       ctx.setLineDash([]);
     }
 
-    // カップ長軸ライン (A - B) : 赤線
+    // カップ長軸 (A - B)
     if (points.length >= 4) {
       ctx.strokeStyle = "#ef4444";
-      ctx.lineWidth = 2.5;
+      ctx.lineWidth = 2.5 / scale;
       ctx.beginPath();
       ctx.moveTo(points[2].x, points[2].y);
       ctx.lineTo(points[3].x, points[3].y);
       ctx.stroke();
     }
 
-    // カップ短軸ライン (C - D) : 青線 & フィッティング楕円
+    // カップ短軸 (C - D) & フィッティング楕円
     if (points.length === 6) {
       ctx.strokeStyle = "#38bdf8";
-      ctx.lineWidth = 2.5;
+      ctx.lineWidth = 2.5 / scale;
       ctx.beginPath();
       ctx.moveTo(points[4].x, points[4].y);
       ctx.lineTo(points[5].x, points[5].y);
@@ -554,29 +690,32 @@
       ctx.translate(midX, midY);
       ctx.rotate(angle);
       ctx.strokeStyle = "rgba(56, 189, 248, 0.85)";
-      ctx.lineWidth = 2;
-      ctx.setLineDash([4, 4]);
+      ctx.lineWidth = 2 / scale;
+      ctx.setLineDash([4 / scale, 4 / scale]);
       ctx.beginPath();
       ctx.ellipse(0, 0, majorLen / 2, minorLen / 2, 0, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
     }
 
-    // 各点マーカー
+    // 各点マーカー（拡大率に応じて見やすいサイズを維持）
     points.forEach((p, idx) => {
       const meta = pointMeta[idx];
+      const r = (idx === draggingIdx ? 9 : 6) / Math.sqrt(scale);
       ctx.fillStyle = meta.color;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, idx === draggingIdx ? 10 : 7, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = "#ffffff";
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2 / scale;
       ctx.stroke();
 
       ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 12px sans-serif";
-      ctx.fillText(meta.label, p.x + 10, p.y - 10);
+      ctx.font = `bold ${Math.max(10, 13 / Math.sqrt(scale))}px sans-serif`;
+      ctx.fillText(meta.label, p.x + 8 / scale, p.y - 8 / scale);
     });
+
+    ctx.restore();
   }
 
   function calculateMeasuredAngles() {
@@ -587,17 +726,12 @@
     const pC  = points[4];
     const pD  = points[5];
 
-    // 基準水平線の角度
     const angleRef = Math.atan2(pH2.y - pH1.y, pH2.x - pH1.x);
-
-    // カップ長軸の角度
     const angleCup = Math.atan2(pB.y - pA.y, pB.x - pA.x);
 
-    // 基準線に対する相対傾斜角 (Radiographic Inclination: RI)
     let deltaAngle = Math.abs(angleCup - angleRef) * (180.0 / Math.PI);
     if (deltaAngle > 90) deltaAngle = 180 - deltaAngle;
 
-    // 前捻角 (Liaw/Widmer法: sin(RA) = minorLen / majorLen)
     const majorLen = Math.hypot(pB.x - pA.x, pB.y - pA.y);
     const minorLen = Math.hypot(pD.x - pC.x, pD.y - pC.y);
 
@@ -606,7 +740,6 @@
       const anteDeg = Math.asin(ratio) * (180.0 / Math.PI);
       measuredAnteDisp.textContent = anteDeg.toFixed(1);
     }
-
     measuredIncDisp.textContent = deltaAngle.toFixed(1);
   }
 
