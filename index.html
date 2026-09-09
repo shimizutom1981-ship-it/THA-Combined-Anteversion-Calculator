@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>THA 透視投影像・カップ前捻角</title>
+  <title>THA カップ設置角・透視写真計測 & 動態シミュレーター</title>
   <style>
     :root {
       --primary: #1e40af;
@@ -14,9 +14,11 @@
       --text-muted: #94a3b8;
       --border: #334155;
       --accent: #38bdf8;
+      --point-color: #f59e0b;
+      --line-color: #ef4444;
     }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: var(--bg);
       color: var(--text);
       margin: 0;
@@ -26,7 +28,7 @@
     }
     .container {
       background: var(--card-bg);
-      max-width: 520px;
+      max-width: 580px;
       width: 100%;
       border-radius: 12px;
       padding: 20px;
@@ -34,7 +36,7 @@
       box-sizing: border-box;
     }
     h1 {
-      font-size: 1.2rem;
+      font-size: 1.25rem;
       margin: 0 0 4px 0;
       color: var(--accent);
       text-align: center;
@@ -45,6 +47,33 @@
       text-align: center;
       margin-top: 0;
       margin-bottom: 16px;
+    }
+    /* タブ切り替え */
+    .tab-container {
+      display: flex;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 16px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      text-align: center;
+    }
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom: 2px solid var(--accent);
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
     }
     .side-selector {
       display: flex;
@@ -61,7 +90,6 @@
       background-color: #334155;
       color: var(--text);
       cursor: pointer;
-      transition: all 0.2s;
     }
     .side-selector button.active {
       background-color: var(--primary);
@@ -90,9 +118,6 @@
       border: 1px solid var(--border);
       border-radius: 6px;
       padding: 0 8px;
-    }
-    .input-wrapper:focus-within {
-      border-color: var(--accent);
     }
     input[type="number"] {
       width: 100%;
@@ -130,9 +155,69 @@
       font-weight: 700;
       color: var(--accent);
     }
+    /* 計測カメラエリア */
+    .photo-area {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .file-input-wrapper {
+      display: flex;
+      gap: 8px;
+    }
+    .file-input-wrapper input[type="file"] {
+      display: none;
+    }
+    .btn-action {
+      flex: 1;
+      padding: 10px;
+      background-color: var(--accent);
+      color: #0f172a;
+      font-weight: 700;
+      border-radius: 6px;
+      text-align: center;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-reset {
+      background-color: #475569;
+      color: #fff;
+    }
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 280px;
+      border: 1px solid var(--border);
+    }
+    canvas {
+      max-width: 100%;
+      cursor: crosshair;
+    }
+    .step-guide {
+      font-size: 0.8rem;
+      background: #1e293b;
+      padding: 8px 12px;
+      border-left: 3px solid var(--accent);
+      border-radius: 4px;
+      color: var(--text-muted);
+    }
+    .step-guide strong {
+      color: var(--accent);
+    }
+    svg {
+      width: 280px;
+      height: 280px;
+      background-color: #000000;
+    }
     .viewer-panel {
-      background-color: var(--panel-bg);
-      border: 2px solid #334155;
+      background-color: #000;
+      border: 1px solid var(--border);
       border-radius: 8px;
       padding: 12px;
       display: flex;
@@ -147,108 +232,293 @@
       color: var(--text-muted);
       margin-bottom: 8px;
     }
-    svg {
-      width: 280px;
-      height: 280px;
-      background-color: #000000;
-    }
-    .meta-text {
-      font-size: 0.75rem;
-      color: #cbd5e1;
-      margin-top: 8px;
-      text-align: center;
-    }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>THA 透視投影像・カップ前捻角</h1>
-  <p class="subtitle">Widmer理論 ＋ 骨盤動態補正 ＋ 透視楕円幾何モデル</p>
+  <h1>THA カップ角度 計測＆シミュレーター</h1>
+  <p class="subtitle">Widmer理論 ＋ 骨盤動態補正 ＋ 写真楕円計測</p>
 
-  <div class="side-selector">
-    <button id="btnRight" class="active" type="button" onclick="setSide('right')">右 股関節 (Right)</button>
-    <button id="btnLeft" type="button" onclick="setSide('left')">左 股関節 (Left)</button>
+  <div class="tab-container">
+    <button class="tab-btn active" onclick="switchTab('measure')">📷 写真から角度計測</button>
+    <button class="tab-btn" onclick="switchTab('simulate')">🎯 目標角・幾何シミュレーション</button>
   </div>
 
-  <div class="grid-inputs">
-    <div class="input-group">
-      <label for="stemAnte">頸部・ステム前捻角 (V_stem)</label>
-      <div class="input-wrapper">
-        <input type="number" id="stemAnte" step="0.5" value="15.0">
-        <span class="unit">°</span>
+  <!-- TAB 1: 写真計測 -->
+  <div id="tab-measure" class="tab-content active">
+    <div class="photo-area">
+      <div class="file-input-wrapper">
+        <label class="btn-action" for="cameraInput">
+          📸 透視写真を撮影 / 選択
+        </label>
+        <input type="file" id="cameraInput" accept="image/*">
+        <button class="btn-action btn-reset" type="button" onclick="resetPoints()">やり直す</button>
       </div>
-    </div>
-    <div class="input-group">
-      <label for="deltaPT">骨盤後傾変化量 (ΔPT)</label>
-      <div class="input-wrapper">
-        <input type="number" id="deltaPT" step="0.5" value="10.0">
-        <span class="unit">°</span>
-      </div>
-    </div>
-    <div class="input-group">
-      <label for="cupInc">カップ外方傾斜角 (Inclination)</label>
-      <div class="input-wrapper">
-        <input type="number" id="cupInc" step="1.0" value="40.0">
-        <span class="unit">°</span>
-      </div>
-    </div>
-    <div class="input-group">
-      <label for="headSize">描画参照外径</label>
-      <div class="input-wrapper">
-        <input type="number" id="headSize" step="1" value="50" disabled>
-        <span class="unit">mm</span>
-      </div>
-    </div>
-  </div>
 
-  <div class="results-row">
-    <div class="res-box">
-      <div class="res-title">目標カップ前捻角 (V_cup)</div>
-      <div class="res-val"><span id="targetCupAnte">--</span><span style="font-size:1rem;">°</span></div>
-    </div>
-    <div class="res-box">
-      <div class="res-title">透視見かけ傾斜角 (Apparent Inc)</div>
-      <div class="res-val"><span id="apparentInc">--</span><span style="font-size:1rem;">°</span></div>
+      <div class="step-guide" id="guideText">
+        1. <strong>長軸の端点 A</strong>（上外側または下内側）をタップしてください
+      </div>
+
+      <div class="canvas-container">
+        <canvas id="photoCanvas"></canvas>
+      </div>
+
+      <div class="results-row">
+        <div class="res-box">
+          <div class="res-title">実測 放射線学的傾斜角 (RI)</div>
+          <div class="res-val"><span id="measuredInc">--</span><span style="font-size:1rem;">°</span></div>
+        </div>
+        <div class="res-box">
+          <div class="res-title">実測 放射線学的前捻角 (RA)</div>
+          <div class="res-val"><span id="measuredAnte">--</span><span style="font-size:1rem;">°</span></div>
+        </div>
+      </div>
+      <div style="font-size:0.75rem; color:var(--text-muted); text-align:center;">
+        ※ Liaw / Widmer法: 長軸径 $2a$ と短軸径 $2b$ より算出 ($RA = \arcsin(b/a)$)
+      </div>
     </div>
   </div>
 
-  <div class="viewer-panel">
-    <div class="viewer-header">
-      <span id="viewSideLabel">イメージ正面像: 右股関節</span>
-      <span>Center Beam 垂直投影</span>
+  <!-- TAB 2: 目標値幾何シミュレータ -->
+  <div id="tab-simulate" class="tab-content">
+    <div class="side-selector">
+      <button id="btnRight" class="active" type="button" onclick="setSide('right')">右 股関節 (Right)</button>
+      <button id="btnLeft" type="button" onclick="setSide('left')">左 股関節 (Left)</button>
     </div>
-    <svg id="fluoroSvg" viewBox="-120 -120 240 240">
-      <!-- 座標軸グリッド -->
-      <line x1="-110" y1="0" x2="110" y2="0" stroke="#1e293b" stroke-width="1"/>
-      <line x1="0" y1="-110" x2="0" y2="110" stroke="#1e293b" stroke-width="1"/>
-      <circle cx="0" cy="0" r="100" fill="none" stroke="#1e293b" stroke-width="1" stroke-dasharray="2 2"/>
 
-      <!-- カップ半球背景（ドーム：上向き骨盤側） -->
-      <path id="cupDome" fill="rgba(56, 189, 248, 0.15)" stroke="#0284c7" stroke-width="1.5" />
+    <div class="grid-inputs">
+      <div class="input-group">
+        <label for="stemAnte">頸部・ステム前捻角 (V_stem)</label>
+        <div class="input-wrapper">
+          <input type="number" id="stemAnte" step="0.5" value="15.0">
+          <span class="unit">°</span>
+        </div>
+      </div>
+      <div class="input-group">
+        <label for="deltaPT">骨盤後傾変化量 (ΔPT)</label>
+        <div class="input-wrapper">
+          <input type="number" id="deltaPT" step="0.5" value="10.0">
+          <span class="unit">°</span>
+        </div>
+      </div>
+      <div class="input-group">
+        <label for="cupInc">目標外方傾斜角 (Inclination)</label>
+        <div class="input-wrapper">
+          <input type="number" id="cupInc" step="1.0" value="40.0">
+          <span class="unit">°</span>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>補正モデル</label>
+        <div class="input-wrapper">
+          <input type="text" value="Widmer - ΔPT/2" disabled style="color:#94a3b8; border:none; background:transparent;">
+        </div>
+      </div>
+    </div>
 
-      <!-- 開口面楕円（フェイス） -->
-      <ellipse id="cupEllipse" cx="0" cy="0" rx="90" ry="30" fill="rgba(56, 189, 248, 0.3)" stroke="#38bdf8" stroke-width="2.5" />
+    <div class="results-row">
+      <div class="res-box">
+        <div class="res-title">目標カップ前捻角 (V_cup)</div>
+        <div class="res-val"><span id="targetCupAnte">--</span><span style="font-size:1rem;">°</span></div>
+      </div>
+      <div class="res-box">
+        <div class="res-title">透視見かけ傾斜角 (Apparent Inc)</div>
+        <div class="res-val"><span id="apparentInc">--</span><span style="font-size:1rem;">°</span></div>
+      </div>
+    </div>
 
-      <!-- 長軸ライン（赤線） -->
-      <line id="majorAxisLine" x1="-90" y1="0" x2="90" y2="0" stroke="#ef4444" stroke-width="2" />
-    </svg>
-    <div class="meta-text" id="ellipseParams">長軸径: 90px | 短軸比: --</div>
+    <div class="viewer-panel">
+      <div class="viewer-header">
+        <span id="viewSideLabel">イメージ正面像: 右股関節</span>
+        <span>Center Beam 垂直投影</span>
+      </div>
+      <svg id="fluoroSvg" viewBox="-120 -120 240 240">
+        <line x1="-110" y1="0" x2="110" y2="0" stroke="#1e293b" stroke-width="1"/>
+        <line x1="0" y1="-110" x2="0" y2="110" stroke="#1e293b" stroke-width="1"/>
+        <circle cx="0" cy="0" r="100" fill="none" stroke="#1e293b" stroke-width="1" stroke-dasharray="2 2"/>
+        <path id="cupDome" fill="rgba(56, 189, 248, 0.15)" stroke="#0284c7" stroke-width="1.5" />
+        <ellipse id="cupEllipse" cx="0" cy="0" rx="85" ry="30" fill="rgba(56, 189, 248, 0.3)" stroke="#38bdf8" stroke-width="2.5" />
+        <line id="majorAxisLine" x1="-85" y1="0" x2="85" y2="0" stroke="#ef4444" stroke-width="2" />
+      </svg>
+      <div style="font-size:0.75rem; color:#cbd5e1; margin-top:8px;" id="ellipseParams">--</div>
+    </div>
   </div>
 </div>
 
 <script>
-  let currentSide = 'right';
+  function switchTab(tabName) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    if (tabName === 'measure') {
+      document.querySelectorAll('.tab-btn')[0].classList.add('active');
+      document.getElementById('tab-measure').classList.add('active');
+    } else {
+      document.querySelectorAll('.tab-btn')[1].classList.add('active');
+      document.getElementById('tab-simulate').classList.add('active');
+      updateSim();
+    }
+  }
 
+  // --- 写真計測ロジック ---
+  const fileInput = document.getElementById('cameraInput');
+  const canvas = document.getElementById('photoCanvas');
+  const ctx = canvas.getContext('2d');
+  const guideText = document.getElementById('guideText');
+  const measuredIncDisp = document.getElementById('measuredInc');
+  const measuredAnteDisp = document.getElementById('measuredAnte');
+
+  let img = new Image();
+  let points = []; // [A, B, C, D] : A-B 長軸, C-D 短軸
+
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      img.onload = () => {
+        setupCanvas();
+        resetPoints();
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function setupCanvas() {
+    const maxW = 540;
+    const scale = Math.min(1, maxW / img.width);
+    canvas.width = img.width * scale;
+    canvas.height = img.height * scale;
+    redraw();
+  }
+
+  function resetPoints() {
+    points = [];
+    guideText.innerHTML = '1. <strong>長軸の端点 A</strong> をタップしてください';
+    measuredIncDisp.textContent = '--';
+    measuredAnteDisp.textContent = '--';
+    redraw();
+  }
+
+  canvas.addEventListener('click', (e) => {
+    if (!img.src || points.length >= 4) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+    points.push({x, y});
+
+    if (points.length === 1) {
+      guideText.innerHTML = '2. <strong>長軸の反対の端点 B</strong> をタップしてください';
+    } else if (points.length === 2) {
+      guideText.innerHTML = '3. <strong>短軸の端点 C</strong> をタップしてください';
+    } else if (points.length === 3) {
+      guideText.innerHTML = '4. <strong>短軸の反対の端点 D</strong> をタップしてください';
+    } else if (points.length === 4) {
+      guideText.innerHTML = '✅ 計測完了';
+      calculateMeasuredAngles();
+    }
+    redraw();
+  });
+
+  function redraw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (img.src) {
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    } else {
+      // プレースホルダー
+      ctx.fillStyle = "#1e293b";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#94a3b8";
+      ctx.font = "14px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("写真を撮影または選択してください", canvas.width / 2, canvas.height / 2);
+    }
+
+    // 点・線の描画
+    points.forEach((p, idx) => {
+      ctx.fillStyle = idx < 2 ? "#ef4444" : "#38bdf8";
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    });
+
+    if (points.length >= 2) {
+      // 長軸
+      ctx.strokeStyle = "#ef4444";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      ctx.lineTo(points[1].x, points[1].y);
+      ctx.stroke();
+    }
+
+    if (points.length === 4) {
+      // 短軸
+      ctx.strokeStyle = "#38bdf8";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(points[2].x, points[2].y);
+      ctx.lineTo(points[3].x, points[3].y);
+      ctx.stroke();
+
+      // フィッティング楕円オーバーレイ
+      const midX = (points[0].x + points[1].x) / 2;
+      const midY = (points[0].y + points[1].y) / 2;
+      const majorLen = Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y);
+      const minorLen = Math.hypot(points[3].x - points[2].x, points[3].y - points[2].y);
+      const angle = Math.atan2(points[1].y - points[0].y, points[1].x - points[0].x);
+
+      ctx.save();
+      ctx.translate(midX, midY);
+      ctx.rotate(angle);
+      ctx.strokeStyle = "rgba(56, 189, 248, 0.8)";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, majorLen / 2, minorLen / 2, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function calculateMeasuredAngles() {
+    const pA = points[0];
+    const pB = points[1];
+    const pC = points[2];
+    const pD = points[3];
+
+    // 長軸径 (2a) & 短軸径 (2b)
+    const majorLen = Math.hypot(pB.x - pA.x, pB.y - pA.y);
+    const minorLen = Math.hypot(pD.x - pC.x, pD.y - pC.y);
+
+    if (majorLen <= 0) return;
+
+    // 水平線に対する長軸の傾斜角 (Radiographic Inclination: RI)
+    const dx = Math.abs(pB.x - pA.x);
+    const dy = Math.abs(pB.y - pA.y);
+    const incDeg = Math.atan2(dy, dx) * (180.0 / Math.PI);
+
+    // Liaw / Widmer法 前捻角: sin(RA) = b / a = minorLen / majorLen
+    const ratio = Math.min(1.0, minorLen / majorLen);
+    const anteDeg = Math.asin(ratio) * (180.0 / Math.PI);
+
+    measuredIncDisp.textContent = incDeg.toFixed(1);
+    measuredAnteDisp.textContent = anteDeg.toFixed(1);
+  }
+
+  // --- 目標値幾何シミュレータロジック ---
+  let currentSide = 'right';
   const stemInput = document.getElementById('stemAnte');
   const ptInput = document.getElementById('deltaPT');
   const incInput = document.getElementById('cupInc');
-
   const targetCupAnteDisp = document.getElementById('targetCupAnte');
   const apparentIncDisp = document.getElementById('apparentInc');
   const viewSideLabel = document.getElementById('viewSideLabel');
   const ellipseParamsDisp = document.getElementById('ellipseParams');
-
   const cupEllipse = document.getElementById('cupEllipse');
   const majorAxisLine = document.getElementById('majorAxisLine');
   const cupDome = document.getElementById('cupDome');
@@ -258,59 +528,50 @@
     document.getElementById('btnRight').classList.toggle('active', side === 'right');
     document.getElementById('btnLeft').classList.toggle('active', side === 'left');
     viewSideLabel.textContent = `イメージ正面像: ${side === 'right' ? '右股関節' : '左股関節'}`;
-    update();
+    updateSim();
   }
 
-  function update() {
+  function updateSim() {
     const vStem = parseFloat(stemInput.value) || 0;
     const deltaPT = parseFloat(ptInput.value) || 0;
     const inc = parseFloat(incInput.value) || 40;
 
-    // Widmer + 1/2ルール動態補正
     const vCup = 37.3 - (0.7 * vStem) - (deltaPT / 2.0);
     targetCupAnteDisp.textContent = vCup.toFixed(1);
 
-    // 幾何学的投影パラメータ
     const incRad = inc * (Math.PI / 180.0);
     const anteRad = Math.max(0, vCup) * (Math.PI / 180.0);
 
-    const a = 85; // 半径 (px)
-    const b = a * Math.sin(anteRad); // 短軸半径
+    const a = 85;
+    const b = a * Math.sin(anteRad);
 
-    // 見かけの長軸傾斜角
     const tanApparent = Math.tan(incRad) * Math.cos(anteRad);
     const apparentIncDeg = Math.atan(tanApparent) * (180.0 / Math.PI);
     apparentIncDisp.textContent = apparentIncDeg.toFixed(1);
 
-    // 右股関節：右下がり傾斜（正の回転）、左股関節：右上がり傾斜（負の回転）
     const rotAngle = currentSide === 'right' ? apparentIncDeg : -apparentIncDeg;
 
-    // 開口面楕円
     cupEllipse.setAttribute('rx', a);
     cupEllipse.setAttribute('ry', Math.abs(b));
     cupEllipse.setAttribute('transform', `rotate(${rotAngle})`);
 
-    // 長軸ライン
     majorAxisLine.setAttribute('x1', -a);
     majorAxisLine.setAttribute('x2', a);
-    majorAxisLine.setAttribute('y1', 0);
-    majorAxisLine.setAttribute('y2', 0);
     majorAxisLine.setAttribute('transform', `rotate(${rotAngle})`);
 
-    // カップ半球ドーム（上外側・骨盤頭側向きに膨らむ半円）
-    // y < 0 方向へ向けて上向き円弧パスを作成
     const domePath = `M ${-a} 0 A ${a} ${a} 0 0 1 ${a} 0 Z`;
     cupDome.setAttribute('d', domePath);
     cupDome.setAttribute('transform', `rotate(${rotAngle})`);
 
-    ellipseParamsDisp.textContent = `長軸比(短軸/長軸): ${(Math.sin(anteRad)).toFixed(2)} | 開口長軸傾斜: ${rotAngle.toFixed(1)}°`;
+    ellipseParamsDisp.textContent = `短長軸比(b/a): ${(Math.sin(anteRad)).toFixed(2)} | 開口長軸傾斜: ${rotAngle.toFixed(1)}°`;
   }
 
-  stemInput.addEventListener('input', update);
-  ptInput.addEventListener('input', update);
-  incInput.addEventListener('input', update);
+  stemInput.addEventListener('input', updateSim);
+  ptInput.addEventListener('input', updateSim);
+  incInput.addEventListener('input', updateSim);
 
-  update();
+  // 初期化
+  setupCanvas();
 </script>
 
 </body>
