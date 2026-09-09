@@ -14,8 +14,6 @@
       --text-muted: #94a3b8;
       --border: #334155;
       --accent: #38bdf8;
-      --point-color: #f59e0b;
-      --line-color: #ef4444;
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -48,7 +46,6 @@
       margin-top: 0;
       margin-bottom: 16px;
     }
-    /* タブ切り替え */
     .tab-container {
       display: flex;
       border-bottom: 2px solid var(--border);
@@ -155,7 +152,6 @@
       font-weight: 700;
       color: var(--accent);
     }
-    /* 計測カメラエリア */
     .photo-area {
       display: flex;
       flex-direction: column;
@@ -194,10 +190,11 @@
       align-items: center;
       min-height: 280px;
       border: 1px solid var(--border);
+      touch-action: none; /* スマホでのドラッグスクロール抑止 */
     }
     canvas {
       max-width: 100%;
-      cursor: crosshair;
+      touch-action: none;
     }
     .step-guide {
       font-size: 0.8rem;
@@ -237,8 +234,8 @@
 <body>
 
 <div class="container">
-  <h1>THA カップ角度 計測＆シミュレーター</h1>
-  <p class="subtitle">Widmer理論 ＋ 骨盤動態補正 ＋ 写真楕円計測</p>
+  <h1>THA カップ設置角・透視写真計測</h1>
+  <p class="subtitle">Widmer理論 ＋ 骨盤動態補正 ＋ 点ドラッグ微調整計測</p>
 
   <div class="tab-container">
     <button class="tab-btn active" onclick="switchTab('measure')">📷 写真から角度計測</button>
@@ -257,7 +254,7 @@
       </div>
 
       <div class="step-guide" id="guideText">
-        1. <strong>長軸の端点 A</strong>（上外側または下内側）をタップしてください
+        1. <strong>長軸の端点 A</strong> をタップしてください
       </div>
 
       <div class="canvas-container">
@@ -266,16 +263,16 @@
 
       <div class="results-row">
         <div class="res-box">
-          <div class="res-title">実測 放射線学的傾斜角 (RI)</div>
+          <div class="res-title">実測 傾斜角 (Apparent Inc)</div>
           <div class="res-val"><span id="measuredInc">--</span><span style="font-size:1rem;">°</span></div>
         </div>
         <div class="res-box">
-          <div class="res-title">実測 放射線学的前捻角 (RA)</div>
+          <div class="res-title">実測 前捻角 (Liaw/Widmer RA)</div>
           <div class="res-val"><span id="measuredAnte">--</span><span style="font-size:1rem;">°</span></div>
         </div>
       </div>
       <div style="font-size:0.75rem; color:var(--text-muted); text-align:center;">
-        ※ Liaw / Widmer法: 長軸径 $2a$ と短軸径 $2b$ より算出 ($RA = \arcsin(b/a)$)
+        ※ 4点打点後、各ポイント（A/B/C/D）を指やマウスでドラッグして微調整できます。
       </div>
     </div>
   </div>
@@ -369,7 +366,10 @@
   const measuredAnteDisp = document.getElementById('measuredAnte');
 
   let img = new Image();
-  let points = []; // [A, B, C, D] : A-B 長軸, C-D 短軸
+  let points = []; // [{x, y, label}]
+  let draggingIdx = -1;
+  const labels = ['A', 'B', 'C', 'D'];
+  const HIT_RADIUS = 28; // タッチ判定半径(px)
 
   fileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
@@ -395,38 +395,92 @@
 
   function resetPoints() {
     points = [];
+    draggingIdx = -1;
     guideText.innerHTML = '1. <strong>長軸の端点 A</strong> をタップしてください';
     measuredIncDisp.textContent = '--';
     measuredAnteDisp.textContent = '--';
     redraw();
   }
 
-  canvas.addEventListener('click', (e) => {
-    if (!img.src || points.length >= 4) return;
+  function getCanvasCoords(e) {
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) * (canvas.width / rect.width);
-    const y = (e.clientY - rect.top) * (canvas.height / rect.height);
-    points.push({x, y});
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+      x: (clientX - rect.left) * (canvas.width / rect.width),
+      y: (clientY - rect.top) * (canvas.height / rect.height)
+    };
+  }
 
-    if (points.length === 1) {
-      guideText.innerHTML = '2. <strong>長軸の反対の端点 B</strong> をタップしてください';
-    } else if (points.length === 2) {
-      guideText.innerHTML = '3. <strong>短軸の端点 C</strong> をタップしてください';
-    } else if (points.length === 3) {
-      guideText.innerHTML = '4. <strong>短軸の反対の端点 D</strong> をタップしてください';
-    } else if (points.length === 4) {
-      guideText.innerHTML = '✅ 計測完了';
+  // ポインター押下（タップ・ドラッグ開始）
+  function handleStart(e) {
+    if (!img.src) return;
+    const pos = getCanvasCoords(e);
+
+    // 既に打点済みの点に近いか判定（ドラッグ微調整モード）
+    let nearestIdx = -1;
+    let minDist = HIT_RADIUS;
+    for (let i = 0; i < points.length; i++) {
+      const d = Math.hypot(points[i].x - pos.x, points[i].y - pos.y);
+      if (d < minDist) {
+        minDist = d;
+        nearestIdx = i;
+      }
+    }
+
+    if (nearestIdx !== -1) {
+      draggingIdx = nearestIdx;
+      return;
+    }
+
+    // 4点未満なら新規打点
+    if (points.length < 4) {
+      points.push({ x: pos.x, y: pos.y, label: labels[points.length] });
+      if (points.length === 1) {
+        guideText.innerHTML = '2. <strong>長軸の反対の端点 B</strong> をタップしてください';
+      } else if (points.length === 2) {
+        guideText.innerHTML = '3. <strong>短軸の端点 C</strong> をタップしてください';
+      } else if (points.length === 3) {
+        guideText.innerHTML = '4. <strong>短軸の反対の端点 D</strong> をタップしてください';
+      } else if (points.length === 4) {
+        guideText.innerHTML = '✅ <strong>計測完了</strong>（各点 A,B,C,D をドラッグして微調整できます）';
+        calculateMeasuredAngles();
+      }
+      redraw();
+    }
+  }
+
+  // ポインター移動（ドラッグ中）
+  function handleMove(e) {
+    if (draggingIdx === -1) return;
+    if (e.cancelable) e.preventDefault();
+    const pos = getCanvasCoords(e);
+    points[draggingIdx].x = Math.max(0, Math.min(canvas.width, pos.x));
+    points[draggingIdx].y = Math.max(0, Math.min(canvas.height, pos.y));
+    if (points.length === 4) {
       calculateMeasuredAngles();
     }
     redraw();
-  });
+  }
+
+  // ポインター解放
+  function handleEnd() {
+    draggingIdx = -1;
+  }
+
+  canvas.addEventListener('mousedown', handleStart);
+  canvas.addEventListener('mousemove', handleMove);
+  window.addEventListener('mouseup', handleEnd);
+
+  canvas.addEventListener('touchstart', handleStart, { passive: false });
+  canvas.addEventListener('touchmove', handleMove, { passive: false });
+  window.addEventListener('touchend', handleEnd);
 
   function redraw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     if (img.src) {
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     } else {
-      // プレースホルダー
       ctx.fillStyle = "#1e293b";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = "#94a3b8";
@@ -435,37 +489,26 @@
       ctx.fillText("写真を撮影または選択してください", canvas.width / 2, canvas.height / 2);
     }
 
-    // 点・線の描画
-    points.forEach((p, idx) => {
-      ctx.fillStyle = idx < 2 ? "#ef4444" : "#38bdf8";
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "#fff";
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-    });
-
+    // 長軸ライン (A-B)
     if (points.length >= 2) {
-      // 長軸
       ctx.strokeStyle = "#ef4444";
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
       ctx.moveTo(points[0].x, points[0].y);
       ctx.lineTo(points[1].x, points[1].y);
       ctx.stroke();
     }
 
+    // 短軸ライン (C-D)
     if (points.length === 4) {
-      // 短軸
       ctx.strokeStyle = "#38bdf8";
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
       ctx.moveTo(points[2].x, points[2].y);
       ctx.lineTo(points[3].x, points[3].y);
       ctx.stroke();
 
-      // フィッティング楕円オーバーレイ
+      // フィッティング楕円のリアルタイム描画
       const midX = (points[0].x + points[1].x) / 2;
       const midY = (points[0].y + points[1].y) / 2;
       const majorLen = Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y);
@@ -475,7 +518,7 @@
       ctx.save();
       ctx.translate(midX, midY);
       ctx.rotate(angle);
-      ctx.strokeStyle = "rgba(56, 189, 248, 0.8)";
+      ctx.strokeStyle = "rgba(56, 189, 248, 0.85)";
       ctx.lineWidth = 2;
       ctx.setLineDash([4, 4]);
       ctx.beginPath();
@@ -483,6 +526,23 @@
       ctx.stroke();
       ctx.restore();
     }
+
+    // 点マークおよびラベル (A, B, C, D)
+    points.forEach((p, idx) => {
+      const isMajor = idx < 2;
+      ctx.fillStyle = isMajor ? "#ef4444" : "#38bdf8";
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, idx === draggingIdx ? 10 : 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // ラベルテキスト描画
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 12px sans-serif";
+      ctx.fillText(labels[idx], p.x + 10, p.y - 10);
+    });
   }
 
   function calculateMeasuredAngles() {
@@ -491,18 +551,17 @@
     const pC = points[2];
     const pD = points[3];
 
-    // 長軸径 (2a) & 短軸径 (2b)
     const majorLen = Math.hypot(pB.x - pA.x, pB.y - pA.y);
     const minorLen = Math.hypot(pD.x - pC.x, pD.y - pC.y);
 
     if (majorLen <= 0) return;
 
-    // 水平線に対する長軸の傾斜角 (Radiographic Inclination: RI)
+    // 水平線に対する傾斜角
     const dx = Math.abs(pB.x - pA.x);
     const dy = Math.abs(pB.y - pA.y);
     const incDeg = Math.atan2(dy, dx) * (180.0 / Math.PI);
 
-    // Liaw / Widmer法 前捻角: sin(RA) = b / a = minorLen / majorLen
+    // Liaw / Widmer法: sin(RA) = b / a = minorLen / majorLen
     const ratio = Math.min(1.0, minorLen / majorLen);
     const anteDeg = Math.asin(ratio) * (180.0 / Math.PI);
 
@@ -570,7 +629,6 @@
   ptInput.addEventListener('input', updateSim);
   incInput.addEventListener('input', updateSim);
 
-  // 初期化
   setupCanvas();
 </script>
 
