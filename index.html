@@ -79,12 +79,9 @@
       background: var(--card-bg);
       max-width: 580px;
       width: 100%;
-
       border-radius: 12px;
       padding: 20px;
-
-      box-shadow:
-        0 10px 15px -3px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
     }
 
     h1 {
@@ -335,7 +332,7 @@
       font-size: 0.75rem;
       color: var(--text-muted);
       text-align: center;
-      line-height: 1.5;
+      line-height: 1.6;
       min-height: 1.2em;
     }
 
@@ -406,7 +403,7 @@
   <h1>THA カップ設置角・透視写真計測</h1>
 
   <p class="subtitle">
-    拡大ズーム ＋ 基準線補正 ＋ 楕円幾何計測
+    5点計測 ＋ 自動中心O ＋ 垂直短軸補正
   </p>
 
   <div class="tab-container">
@@ -429,6 +426,7 @@
 
   <!-- =====================================================
        TAB 1
+       写真計測
        ===================================================== -->
 
   <div id="tab-measure" class="tab-content active">
@@ -503,6 +501,7 @@
       <div class="results-row">
 
         <div class="res-box">
+
           <div class="res-title">
             基準補正 外方傾斜角 (RI)
           </div>
@@ -511,9 +510,11 @@
             <span id="measuredInc">--</span>
             <span style="font-size:1rem;">°</span>
           </div>
+
         </div>
 
         <div class="res-box">
+
           <div class="res-title">
             実測 前捻角 (RA)
           </div>
@@ -522,6 +523,7 @@
             <span id="measuredAnte">--</span>
             <span style="font-size:1rem;">°</span>
           </div>
+
         </div>
 
       </div>
@@ -529,7 +531,7 @@
       <div
         class="measurement-info"
         id="measurementInfo">
-        C-DはA-Bに対する垂直成分を短軸として自動補正します
+        A-Bの中点を中心Oとし、O-CのA-B垂直成分から短軸を自動計算します
       </div>
 
       <div
@@ -537,18 +539,22 @@
           font-size:0.75rem;
           color:var(--text-muted);
           text-align:center;
-          line-height:1.5;
+          line-height:1.6;
         ">
 
-        緑：基準線(H1-H2) |
-        赤：長軸(A-B) |
-        青：指定C-D |
-        水色点線：補正短軸
+        緑：基準線 H1-H2 |
+        赤：長軸 A-B |
+        青：指定点 C
 
         <br>
 
-        2本指でピンチ拡大・移動、
-        1本指で打点・ドラッグ微調整
+        黄：自動中心 O |
+        水色点線：補正短軸 C′-O-D′
+
+        <br>
+
+        2本指：拡大・移動 |
+        1本指：打点・ドラッグ微調整
 
       </div>
 
@@ -558,6 +564,7 @@
 
   <!-- =====================================================
        TAB 2
+       シミュレーター
        ===================================================== -->
 
   <div id="tab-simulate" class="tab-content">
@@ -878,11 +885,23 @@ let currentObjectURL = null;
 
 let imageLoaded = false;
 
+/*
+  iPhone写真の巨大Canvas化を防ぐ
+*/
 const MAX_IMAGE_DIMENSION = 1800;
 
 
 /* =========================================================
-   計測点
+   5点方式
+
+   0 = H1
+   1 = H2
+   2 = A
+   3 = B
+   4 = C
+
+   O は A-B中点から自動計算
+   D' は Cから自動計算
    ========================================================= */
 
 let points = [];
@@ -891,17 +910,30 @@ let draggingIdx = -1;
 
 const pointMeta = [
 
-  { label: "H1", color: "#10b981" },
+  {
+    label: "H1",
+    color: "#10b981"
+  },
 
-  { label: "H2", color: "#10b981" },
+  {
+    label: "H2",
+    color: "#10b981"
+  },
 
-  { label: "A", color: "#ef4444" },
+  {
+    label: "A",
+    color: "#ef4444"
+  },
 
-  { label: "B", color: "#ef4444" },
+  {
+    label: "B",
+    color: "#ef4444"
+  },
 
-  { label: "C", color: "#38bdf8" },
-
-  { label: "D", color: "#38bdf8" }
+  {
+    label: "C",
+    color: "#38bdf8"
+  }
 
 ];
 
@@ -925,7 +957,8 @@ const MAX_SCALE = 6.0;
    Pointer
    ========================================================= */
 
-const activePointers = new Map();
+const activePointers =
+  new Map();
 
 let pinchStartDistance = 0;
 
@@ -941,16 +974,19 @@ let pinchStartPanY = 0;
 
 
 /* =========================================================
-   Canvas初期化
+   初期Canvas
    ========================================================= */
 
 function initializeCanvas() {
 
-  canvas.width = 540;
+  canvas.width =
+    540;
 
-  canvas.height = 360;
+  canvas.height =
+    360;
 
-  imageLoaded = false;
+  imageLoaded =
+    false;
 
   redraw();
 }
@@ -980,7 +1016,8 @@ fileInput.addEventListener(
         currentObjectURL
       );
 
-      currentObjectURL = null;
+      currentObjectURL =
+        null;
     }
 
     currentObjectURL =
@@ -1100,7 +1137,8 @@ function resetPoints() {
 
   points = [];
 
-  draggingIdx = -1;
+  draggingIdx =
+    -1;
 
   measuredIncDisp.textContent =
     "--";
@@ -1109,7 +1147,7 @@ function resetPoints() {
     "--";
 
   measurementInfo.textContent =
-    "C-DはA-Bに対する垂直成分を短軸として自動補正します";
+    "A-Bの中点を中心Oとし、O-CのA-B垂直成分から短軸を自動計算します";
 
   updateGuide();
 
@@ -1181,11 +1219,14 @@ function adjustZoom(factor) {
 
 function resetZoom() {
 
-  scale = 1.0;
+  scale =
+    1.0;
 
-  panX = 0;
+  panX =
+    0;
 
-  panY = 0;
+  panY =
+    0;
 
   updateZoomDisplay();
 
@@ -1206,9 +1247,11 @@ function clampPan() {
 
   if (scale <= 1) {
 
-    panX = 0;
+    panX =
+      0;
 
-    panY = 0;
+    panY =
+      0;
 
     return;
   }
@@ -1338,47 +1381,30 @@ function getPointerMidpoint(
 
 
 /* =========================================================
-   新しい短軸補正ロジック
+   5点方式の核心
+
+   A-B：
+     楕円長軸
+
+   O：
+     A-Bの中点
+
+   C：
+     rim上の片側1点
+
+   O-CをA-Bに垂直な方向へ投影する。
+
+   その距離 = 半短軸
+
+   短軸全長 = 2 × 半短軸
+
    ========================================================= */
 
-/*
-  A-B を長軸ベクトルとする。
+function getCupGeometry() {
 
-       AB = (dx, dy)
-
-  単位長軸ベクトル：
-
-       u = AB / |AB|
-
-  その長軸に垂直な単位ベクトル：
-
-       n = (-uy, ux)
-
-  C-Dベクトル：
-
-       CD = D - C
-
-  C-Dの長軸垂直方向成分は
-
-       CD_perp = CD・n
-
-  したがって補正短軸長は
-
-       b = |CD・n|
-
-  これは2次元cross productを使えば
-
-       b = |AB × CD| / |AB|
-
-  と同じ。
-
-  C-Dが斜めでも、A-B方向へ混入した
-  成分を除去できる。
-*/
-
-function getCorrectedMinorAxis() {
-
-  if (points.length < 6) {
+  if (
+    points.length < 5
+  ) {
     return null;
   }
 
@@ -1391,8 +1417,10 @@ function getCorrectedMinorAxis() {
   const C =
     points[4];
 
-  const D =
-    points[5];
+
+  /*
+    A-Bベクトル
+  */
 
   const abX =
     B.x - A.x;
@@ -1400,18 +1428,41 @@ function getCorrectedMinorAxis() {
   const abY =
     B.y - A.y;
 
+
+  /*
+    長軸全長
+  */
+
   const majorLength =
     Math.hypot(
       abX,
       abY
     );
 
-  if (majorLength <= 0) {
+  if (
+    majorLength <= 0
+  ) {
     return null;
   }
 
+
   /*
-    長軸単位ベクトル
+    自動中心O
+  */
+
+  const O = {
+
+    x:
+      (A.x + B.x) / 2,
+
+    y:
+      (A.y + B.y) / 2
+
+  };
+
+
+  /*
+    A-B単位ベクトル
   */
 
   const ux =
@@ -1422,8 +1473,11 @@ function getCorrectedMinorAxis() {
     abY /
     majorLength;
 
+
   /*
-    長軸に垂直な単位ベクトル
+    A-Bに垂直な単位ベクトル
+
+    n = (-uy, ux)
   */
 
   const nx =
@@ -1432,97 +1486,126 @@ function getCorrectedMinorAxis() {
   const ny =
     ux;
 
+
   /*
-    C-Dベクトル
+    O-Cベクトル
   */
 
-  const cdX =
-    D.x - C.x;
+  const ocX =
+    C.x - O.x;
 
-  const cdY =
-    D.y - C.y;
+  const ocY =
+    C.y - O.y;
 
-  const rawCDLength =
+  const rawOCLength =
     Math.hypot(
-      cdX,
-      cdY
+      ocX,
+      ocY
     );
 
+
   /*
-    C-Dを長軸垂直方向へ射影
+    O-CのA-B垂直方向成分
+
+    signedSemiMinor =
+        OC ・ n
   */
 
-  const signedPerpendicularLength =
-    cdX * nx +
-    cdY * ny;
+  const signedSemiMinor =
+    ocX * nx +
+    ocY * ny;
 
-  const correctedMinorLength =
+
+  /*
+    半短軸
+  */
+
+  const semiMinorLength =
     Math.abs(
-      signedPerpendicularLength
+      signedSemiMinor
     );
 
-  /*
-    C-Dの中点を基準として
-    補正短軸線を描画する。
 
-    これによりユーザーが指定したC-Dと
-    実際に計算に使われた垂直成分を
-    視覚的に比較できる。
+  /*
+    短軸全長
   */
 
-  const centerX =
-    (C.x + D.x) / 2;
+  const minorLength =
+    2 *
+    semiMinorLength;
 
-  const centerY =
-    (C.y + D.y) / 2;
 
-  const halfSigned =
-    signedPerpendicularLength / 2;
+  /*
+    Cを垂線上へ投影した
+    真のrim位置 C'
+  */
 
-  const correctedC = {
+  const projectedC = {
 
     x:
-      centerX -
-      nx * halfSigned,
+      O.x +
+      nx *
+      signedSemiMinor,
 
     y:
-      centerY -
-      ny * halfSigned
+      O.y +
+      ny *
+      signedSemiMinor
 
   };
 
-  const correctedD = {
+
+  /*
+    反対側rim D'を
+    中心対称で自動生成
+  */
+
+  const projectedD = {
 
     x:
-      centerX +
-      nx * halfSigned,
+      O.x -
+      nx *
+      signedSemiMinor,
 
     y:
-      centerY +
-      ny * halfSigned
+      O.y -
+      ny *
+      signedSemiMinor
 
   };
 
-  /*
-    C-DがA-Bに対してどれだけ
-    垂直に近いかも計算する。
 
-    完全垂直なら90°。
+  /*
+    Cの長軸方向へのズレ量。
+
+    0ならCは完全に
+    Oを通る短軸上。
   */
 
-  let angleCDvsAB = 0;
+  const longitudinalOffset =
+    ocX * ux +
+    ocY * uy;
 
-  if (rawCDLength > 0) {
+
+  /*
+    O-CとA-Bの角度。
+
+    完全短軸なら90°
+  */
+
+  let angleOCvsAB =
+    0;
+
+  if (
+    rawOCLength > 0
+  ) {
 
     const dot =
       (
-        abX * cdX +
-        abY * cdY
+        ocX * ux +
+        ocY * uy
       ) /
-      (
-        majorLength *
-        rawCDLength
-      );
+      rawOCLength;
 
     const safeDot =
       Math.max(
@@ -1533,7 +1616,7 @@ function getCorrectedMinorAxis() {
         )
       );
 
-    let angle =
+    angleOCvsAB =
       Math.acos(
         Math.abs(
           safeDot
@@ -1541,43 +1624,39 @@ function getCorrectedMinorAxis() {
       ) *
       180 /
       Math.PI;
-
-    /*
-      0～90°
-    */
-
-    angleCDvsAB =
-      angle;
   }
+
 
   return {
 
-    majorLength:
-      majorLength,
+    A,
+    B,
+    C,
+    O,
 
-    rawMinorLength:
-      rawCDLength,
+    ux,
+    uy,
 
-    correctedMinorLength:
-      correctedMinorLength,
+    nx,
+    ny,
 
-    signedPerpendicularLength:
-      signedPerpendicularLength,
+    majorLength,
 
-    correctedC:
-      correctedC,
+    rawOCLength,
 
-    correctedD:
-      correctedD,
+    signedSemiMinor,
 
-    perpendicularAngle:
-      angleCDvsAB,
+    semiMinorLength,
 
-    nx:
-      nx,
+    minorLength,
 
-    ny:
-      ny
+    longitudinalOffset,
+
+    angleOCvsAB,
+
+    projectedC,
+
+    projectedD
 
   };
 }
@@ -1614,6 +1693,7 @@ function handlePointerDown(event) {
     event.pointerId,
     pos
   );
+
 
   /*
     2本指
@@ -1667,6 +1747,11 @@ function handlePointerDown(event) {
     return;
   }
 
+
+  /*
+    1本指
+  */
+
   if (
     activePointers.size !== 1
   ) {
@@ -1695,6 +1780,11 @@ function handlePointerDown(event) {
 
   let minDist =
     hitRadius;
+
+
+  /*
+    既存5点へのヒット判定
+  */
 
   for (
     let i = 0;
@@ -1734,8 +1824,9 @@ function handlePointerDown(event) {
     }
   }
 
+
   /*
-    既存点ドラッグ
+    既存点をドラッグ
   */
 
   if (
@@ -1750,12 +1841,15 @@ function handlePointerDown(event) {
     return;
   }
 
+
   /*
     新規打点
+
+    5点まで
   */
 
   if (
-    points.length < 6
+    points.length < 5
   ) {
 
     const imagePos =
@@ -1789,7 +1883,7 @@ function handlePointerDown(event) {
     updateGuide();
 
     if (
-      points.length === 6
+      points.length === 5
     ) {
 
       calculateMeasuredAngles();
@@ -1826,6 +1920,7 @@ function handlePointerMove(event) {
     event.pointerId,
     pos
   );
+
 
   /*
     2本指
@@ -1913,8 +2008,9 @@ function handlePointerMove(event) {
     return;
   }
 
+
   /*
-    点ドラッグ
+    1本指で既存点を微調整
   */
 
   if (
@@ -1947,7 +2043,7 @@ function handlePointerMove(event) {
       );
 
     if (
-      points.length === 6
+      points.length === 5
     ) {
 
       calculateMeasuredAngles();
@@ -2044,7 +2140,7 @@ canvas.addEventListener(
 
 
 /* =========================================================
-   Wheel zoom
+   PCホイールズーム
    ========================================================= */
 
 canvas.addEventListener(
@@ -2116,7 +2212,6 @@ canvas.addEventListener(
 
     redraw();
   },
-
   {
     passive: false
   }
@@ -2150,22 +2245,17 @@ function updateGuide() {
   } else if (count === 3) {
 
     guideText.innerHTML =
-      '4. <strong>カップ長軸の反対側 B</strong> をタップ';
+      '4. <strong>カップ長軸の反対側 B</strong> をタップ → 中心Oを自動決定';
 
   } else if (count === 4) {
 
     guideText.innerHTML =
-      '5. <strong>カップ短軸の端点 C</strong> をタップ';
-
-  } else if (count === 5) {
-
-    guideText.innerHTML =
-      '6. <strong>カップ短軸の反対側 D</strong> をタップ';
+      '5. <strong>短軸側rim上の点 C</strong> を1点だけタップ';
 
   } else {
 
     guideText.innerHTML =
-      '✅ <strong>計測完了</strong>（C-Dの斜め成分は自動補正・各点ドラッグ可）';
+      '✅ <strong>5点計測完了</strong> — O・反対側rim・短軸を自動計算（各点ドラッグ可）';
   }
 }
 
@@ -2186,6 +2276,11 @@ function redraw() {
     canvas.width,
     canvas.height
   );
+
+
+  /*
+    画像未読み込み
+  */
 
   if (!imageLoaded) {
 
@@ -2220,6 +2315,7 @@ function redraw() {
     return;
   }
 
+
   ctx.save();
 
   ctx.translate(
@@ -2231,6 +2327,7 @@ function redraw() {
     scale,
     scale
   );
+
 
   /*
     画像
@@ -2244,9 +2341,10 @@ function redraw() {
     canvas.height
   );
 
-  /*
-    基準線
-  */
+
+  /* =======================================================
+     基準線 H1-H2
+     ======================================================= */
 
   if (
     points.length >= 2
@@ -2271,6 +2369,11 @@ function redraw() {
     );
 
     ctx.stroke();
+
+
+    /*
+      基準線延長
+    */
 
     const dxH =
       points[1].x -
@@ -2314,13 +2417,20 @@ function redraw() {
     ctx.setLineDash([]);
   }
 
-  /*
-    長軸 A-B
-  */
+
+  /* =======================================================
+     長軸 A-B
+     ======================================================= */
 
   if (
     points.length >= 4
   ) {
+
+    const A =
+      points[2];
+
+    const B =
+      points[3];
 
     ctx.strokeStyle =
       "#ef4444";
@@ -2331,77 +2441,169 @@ function redraw() {
     ctx.beginPath();
 
     ctx.moveTo(
-      points[2].x,
-      points[2].y
+      A.x,
+      A.y
     );
 
     ctx.lineTo(
-      points[3].x,
-      points[3].y
-    );
-
-    ctx.stroke();
-  }
-
-  /*
-    C-D 元の指定線
-  */
-
-  if (
-    points.length === 6
-  ) {
-
-    ctx.strokeStyle =
-      "rgba(56,189,248,0.55)";
-
-    ctx.lineWidth =
-      2 / scale;
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-      points[4].x,
-      points[4].y
-    );
-
-    ctx.lineTo(
-      points[5].x,
-      points[5].y
+      B.x,
+      B.y
     );
 
     ctx.stroke();
 
 
     /*
-      補正短軸
+      A-Bの中点 O
     */
 
-    const corrected =
-      getCorrectedMinorAxis();
+    const O = {
 
-    if (corrected) {
+      x:
+        (A.x + B.x) / 2,
+
+      y:
+        (A.y + B.y) / 2
+
+    };
+
+
+    /*
+      Oマーカー
+    */
+
+    const oRadius =
+      7 / scale;
+
+    ctx.fillStyle =
+      "#facc15";
+
+    ctx.beginPath();
+
+    ctx.arc(
+      O.x,
+      O.y,
+      oRadius,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fill();
+
+    ctx.strokeStyle =
+      "#ffffff";
+
+    ctx.lineWidth =
+      2 / scale;
+
+    ctx.stroke();
+
+    ctx.fillStyle =
+      "#facc15";
+
+    ctx.font =
+      "bold " +
+      (14 / scale) +
+      "px -apple-system, sans-serif";
+
+    ctx.textAlign =
+      "left";
+
+    ctx.textBaseline =
+      "alphabetic";
+
+    ctx.fillText(
+      "O",
+      O.x +
+      10 / scale,
+      O.y -
+      10 / scale
+    );
+  }
+
+
+  /* =======================================================
+     5点揃ったら短軸計算
+     ======================================================= */
+
+  if (
+    points.length === 5
+  ) {
+
+    const geometry =
+      getCupGeometry();
+
+    if (geometry) {
+
+      const C =
+        geometry.C;
+
+      const O =
+        geometry.O;
+
+      const Cprime =
+        geometry.projectedC;
+
+      const Dprime =
+        geometry.projectedD;
+
+
+      /*
+        O → 元の指定C
+
+        ユーザーが実際にどこを
+        タップしたかを薄い青で表示
+      */
 
       ctx.strokeStyle =
-        "#67e8f9";
+        "rgba(56,189,248,0.55)";
 
       ctx.lineWidth =
-        3 / scale;
+        1.8 / scale;
+
+      ctx.beginPath();
+
+      ctx.moveTo(
+        O.x,
+        O.y
+      );
+
+      ctx.lineTo(
+        C.x,
+        C.y
+      );
+
+      ctx.stroke();
+
+
+      /*
+        C → C'
+
+        長軸方向にどれだけ
+        補正されたかを示す
+      */
+
+      ctx.strokeStyle =
+        "rgba(250,204,21,0.75)";
+
+      ctx.lineWidth =
+        1.5 / scale;
 
       ctx.setLineDash([
-        6 / scale,
+        4 / scale,
         4 / scale
       ]);
 
       ctx.beginPath();
 
       ctx.moveTo(
-        corrected.correctedC.x,
-        corrected.correctedC.y
+        C.x,
+        C.y
       );
 
       ctx.lineTo(
-        corrected.correctedD.x,
-        corrected.correctedD.y
+        Cprime.x,
+        Cprime.y
       );
 
       ctx.stroke();
@@ -2410,40 +2612,132 @@ function redraw() {
 
 
       /*
+        補正後短軸 C'-O-D'
+
+        A-Bと完全に垂直
+      */
+
+      ctx.strokeStyle =
+        "#67e8f9";
+
+      ctx.lineWidth =
+        3 / scale;
+
+      ctx.setLineDash([
+        7 / scale,
+        4 / scale
+      ]);
+
+      ctx.beginPath();
+
+      ctx.moveTo(
+        Cprime.x,
+        Cprime.y
+      );
+
+      ctx.lineTo(
+        Dprime.x,
+        Dprime.y
+      );
+
+      ctx.stroke();
+
+      ctx.setLineDash([]);
+
+
+      /*
+        自動生成C'マーカー
+      */
+
+      ctx.fillStyle =
+        "#67e8f9";
+
+      ctx.beginPath();
+
+      ctx.arc(
+        Cprime.x,
+        Cprime.y,
+        5 / scale,
+        0,
+        Math.PI * 2
+      );
+
+      ctx.fill();
+
+
+      /*
+        自動生成D'マーカー
+      */
+
+      ctx.fillStyle =
+        "#67e8f9";
+
+      ctx.beginPath();
+
+      ctx.arc(
+        Dprime.x,
+        Dprime.y,
+        5 / scale,
+        0,
+        Math.PI * 2
+      );
+
+      ctx.fill();
+
+
+      /*
+        D'ラベル
+      */
+
+      ctx.fillStyle =
+        "#67e8f9";
+
+      ctx.font =
+        "bold " +
+        (13 / scale) +
+        "px -apple-system, sans-serif";
+
+      ctx.fillText(
+        "D′",
+        Dprime.x +
+        8 / scale,
+        Dprime.y -
+        8 / scale
+      );
+
+
+      /*
         補正後楕円
       */
 
-      const midX =
-        (
-          points[2].x +
-          points[3].x
-        ) / 2;
-
-      const midY =
-        (
-          points[2].y +
-          points[3].y
-        ) / 2;
-
       const angle =
         Math.atan2(
-          points[3].y -
-          points[2].y,
+          geometry.B.y -
+          geometry.A.y,
 
-          points[3].x -
-          points[2].x
+          geometry.B.x -
+          geometry.A.x
+        );
+
+      const semiMajor =
+        geometry.majorLength / 2;
+
+      const semiMinor =
+        Math.min(
+          geometry.semiMinorLength,
+          semiMajor
         );
 
       if (
-        corrected.majorLength > 0 &&
-        corrected.correctedMinorLength > 0
+        semiMajor > 0 &&
+        semiMinor > 0
       ) {
 
         ctx.save();
 
         ctx.translate(
-          midX,
-          midY
+          O.x,
+          O.y
         );
 
         ctx.rotate(
@@ -2466,14 +2760,8 @@ function redraw() {
         ctx.ellipse(
           0,
           0,
-
-          corrected.majorLength / 2,
-
-          Math.min(
-            corrected.correctedMinorLength,
-            corrected.majorLength
-          ) / 2,
-
+          semiMajor,
+          semiMinor,
           0,
           0,
           Math.PI * 2
@@ -2487,9 +2775,9 @@ function redraw() {
   }
 
 
-  /*
-    点
-  */
+  /* =======================================================
+     ユーザー指定5点
+     ======================================================= */
 
   points.forEach(
     function (
@@ -2547,10 +2835,8 @@ function redraw() {
 
       ctx.fillText(
         meta.label,
-
         point.x +
         9 / scale,
-
         point.y -
         9 / scale
       );
@@ -2562,13 +2848,13 @@ function redraw() {
 
 
 /* =========================================================
-   計測
+   角度計測
    ========================================================= */
 
 function calculateMeasuredAngles() {
 
   if (
-    points.length !== 6
+    points.length !== 5
   ) {
     return;
   }
@@ -2586,9 +2872,9 @@ function calculateMeasuredAngles() {
     points[3];
 
 
-  /*
-    RI
-  */
+  /* =======================================================
+     RI
+     ======================================================= */
 
   const angleRef =
     Math.atan2(
@@ -2624,16 +2910,16 @@ function calculateMeasuredAngles() {
   }
 
 
-  /*
-    補正短軸
-  */
+  /* =======================================================
+     RA
+     ======================================================= */
 
-  const corrected =
-    getCorrectedMinorAxis();
+  const geometry =
+    getCupGeometry();
 
   if (
-    !corrected ||
-    corrected.majorLength <= 0
+    !geometry ||
+    geometry.majorLength <= 0
   ) {
 
     measuredIncDisp.textContent =
@@ -2647,7 +2933,20 @@ function calculateMeasuredAngles() {
 
 
   /*
-    補正後短長軸比
+    majorLength = 長軸全長 a
+
+    semiMinorLength =
+      Oからrimまでの
+      垂直投影距離
+
+    minorLength =
+      2 × semiMinorLength
+
+    したがって
+
+      b/a =
+      minorLength / majorLength
+
   */
 
   const ratio =
@@ -2655,16 +2954,14 @@ function calculateMeasuredAngles() {
       1,
       Math.max(
         0,
-        corrected.correctedMinorLength /
-        corrected.majorLength
+        geometry.minorLength /
+        geometry.majorLength
       )
     );
 
 
   /*
     RA = asin(b/a)
-
-    bにはC-DのA-B垂直成分を使用
   */
 
   const anteDeg =
@@ -2682,27 +2979,33 @@ function calculateMeasuredAngles() {
     anteDeg.toFixed(1);
 
 
-  /*
-    補正状態を表示
-  */
+  /* =======================================================
+     補正状態表示
+     ======================================================= */
 
-  const rawRatio =
-    corrected.rawMinorLength /
-    corrected.majorLength;
+  const semiMajor =
+    geometry.majorLength / 2;
 
-  const correctedRatio =
-    corrected.correctedMinorLength /
-    corrected.majorLength;
-
+  const normalizedOffset =
+    semiMajor > 0
+      ? Math.abs(
+          geometry.longitudinalOffset
+        ) /
+        semiMajor
+      : 0;
 
   measurementInfo.textContent =
-    "C-D∠A-B: " +
-    corrected.perpendicularAngle.toFixed(1) +
-    "° / " +
-    "補正前 b/a: " +
-    rawRatio.toFixed(3) +
-    " → 垂直補正 b/a: " +
-    correctedRatio.toFixed(3);
+    "OC∠AB: " +
+    geometry.angleOCvsAB.toFixed(1) +
+    "° | " +
+    "C長軸方向ズレ: " +
+    (
+      normalizedOffset *
+      100
+    ).toFixed(1) +
+    "% | " +
+    "補正 b/a: " +
+    ratio.toFixed(3);
 }
 
 
