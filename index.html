@@ -2,12 +2,14 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport"
-        content="width=device-width,
-                 initial-scale=1.0,
-                 maximum-scale=1.0,
-                 user-scalable=no,
-                 viewport-fit=cover">
+
+  <meta
+    name="viewport"
+    content="width=device-width,
+             initial-scale=1.0,
+             maximum-scale=1.0,
+             user-scalable=no,
+             viewport-fit=cover">
 
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -19,7 +21,6 @@
       --primary: #1e40af;
       --bg: #0f172a;
       --card-bg: #1e293b;
-      --panel-bg: #000000;
       --text: #f8fafc;
       --text-muted: #94a3b8;
       --border: #334155;
@@ -101,10 +102,6 @@
       margin-bottom: 16px;
     }
 
-    /* -------------------------
-       タブ
-       ------------------------- */
-
     .tab-container {
       display: flex;
       border-bottom: 2px solid var(--border);
@@ -114,15 +111,11 @@
     .tab-btn {
       flex: 1;
       padding: 10px 6px;
-
       background: none;
       border: none;
-
       color: var(--text-muted);
-
       font-weight: 700;
       font-size: 0.88rem;
-
       cursor: pointer;
       text-align: center;
     }
@@ -140,10 +133,6 @@
       display: block;
     }
 
-    /* -------------------------
-       左右選択
-       ------------------------- */
-
     .side-selector {
       display: flex;
       gap: 8px;
@@ -152,18 +141,13 @@
 
     .side-selector button {
       flex: 1;
-
       padding: 10px;
-
       font-weight: 700;
       font-size: 0.95rem;
-
       border: 1px solid var(--border);
       border-radius: 6px;
-
       background-color: #334155;
       color: var(--text);
-
       cursor: pointer;
     }
 
@@ -172,10 +156,6 @@
       border-color: var(--accent);
       color: #ffffff;
     }
-
-    /* -------------------------
-       入力
-       ------------------------- */
 
     .grid-inputs {
       display: grid;
@@ -198,28 +178,20 @@
     .input-wrapper {
       display: flex;
       align-items: center;
-
       background-color: #0f172a;
-
       border: 1px solid var(--border);
       border-radius: 6px;
-
       padding: 0 8px;
     }
 
     input[type="number"],
     input[type="text"] {
       width: 100%;
-
       padding: 8px 4px;
-
       font-size: 1rem;
-
       background: transparent;
       border: none;
-
       color: #ffffff;
-
       outline: none;
     }
 
@@ -227,10 +199,6 @@
       font-size: 0.85rem;
       color: var(--text-muted);
     }
-
-    /* -------------------------
-       結果
-       ------------------------- */
 
     .results-row {
       display: grid;
@@ -241,12 +209,9 @@
 
     .res-box {
       background: #0f172a;
-
       border: 1px solid var(--border);
       border-radius: 8px;
-
       padding: 10px;
-
       text-align: center;
     }
 
@@ -261,10 +226,6 @@
       font-weight: 700;
       color: var(--accent);
     }
-
-    /* -------------------------
-       写真
-       ------------------------- */
 
     .photo-area {
       display: flex;
@@ -285,132 +246,84 @@
     .btn-action {
       flex: 2;
       min-width: 140px;
-
       padding: 10px;
-
       background-color: var(--accent);
       color: #0f172a;
-
       font-weight: 700;
-
       border-radius: 6px;
-
       text-align: center;
       cursor: pointer;
-
       border: none;
-
       user-select: none;
       -webkit-user-select: none;
     }
 
     .btn-reset {
       flex: 1;
-
       background-color: #475569;
       color: #ffffff;
     }
 
-    /* -------------------------
-       ズーム
-       ------------------------- */
-
     .zoom-controls {
       display: flex;
       align-items: center;
-
       gap: 6px;
-
       background: #0f172a;
-
       padding: 6px;
-
       border-radius: 6px;
       border: 1px solid var(--border);
-
       flex-wrap: wrap;
     }
 
     .zoom-btn {
       background: #334155;
       color: #ffffff;
-
       border: none;
-
       padding: 7px 10px;
-
       border-radius: 4px;
-
       font-weight: bold;
       cursor: pointer;
-
       font-size: 0.85rem;
     }
 
     .zoom-info {
       font-size: 0.75rem;
       color: var(--text-muted);
-
       margin-left: auto;
     }
 
-    /* -------------------------
-       Canvas
-       ------------------------- */
-
     .canvas-container {
       position: relative;
-
       width: 100%;
-
       background: #000000;
-
       border-radius: 8px;
       overflow: hidden;
-
       display: flex;
       justify-content: center;
       align-items: center;
-
       min-height: 280px;
-
       border: 1px solid var(--border);
-
-      /*
-       Safariでブラウザ側のジェスチャー処理と
-       Canvas操作が競合しないようにする。
-      */
       touch-action: none;
-
       overscroll-behavior: contain;
     }
 
     canvas {
       display: block;
-
       width: 100%;
       height: auto;
-
       max-width: 100%;
-
       touch-action: none;
-
       user-select: none;
       -webkit-user-select: none;
-
       cursor: crosshair;
     }
 
     .step-guide {
       font-size: 0.8rem;
-
       background: #1e293b;
-
       padding: 8px 12px;
-
       border-left: 3px solid var(--accent);
       border-radius: 4px;
-
       color: var(--text-muted);
     }
 
@@ -418,27 +331,27 @@
       color: var(--accent);
     }
 
-    /* -------------------------
-       SVG Viewer
-       ------------------------- */
+    .measurement-info {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.5;
+      min-height: 1.2em;
+    }
 
     svg {
       width: 280px;
       max-width: 100%;
       height: auto;
       aspect-ratio: 1 / 1;
-
       background-color: #000000;
     }
 
     .viewer-panel {
       background-color: #000000;
-
       border: 1px solid var(--border);
       border-radius: 8px;
-
       padding: 12px;
-
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -446,24 +359,15 @@
 
     .viewer-header {
       width: 100%;
-
       display: flex;
       justify-content: space-between;
-
       gap: 8px;
-
       font-size: 0.75rem;
       color: var(--text-muted);
-
       margin-bottom: 8px;
     }
 
-    /* -------------------------
-       小さいiPhone
-       ------------------------- */
-
     @media (max-width: 430px) {
-
       body {
         padding-left: max(8px, env(safe-area-inset-left));
         padding-right: max(8px, env(safe-area-inset-right));
@@ -481,10 +385,7 @@
         font-size: 0.78rem;
       }
 
-      .grid-inputs {
-        gap: 8px;
-      }
-
+      .grid-inputs,
       .results-row {
         gap: 8px;
       }
@@ -498,7 +399,6 @@
   </style>
 </head>
 
-
 <body>
 
 <div class="container">
@@ -508,11 +408,6 @@
   <p class="subtitle">
     拡大ズーム ＋ 基準線補正 ＋ 楕円幾何計測
   </p>
-
-
-  <!-- =========================
-       TAB
-       ========================= -->
 
   <div class="tab-container">
 
@@ -532,11 +427,9 @@
 
   </div>
 
-
-  <!-- =========================
+  <!-- =====================================================
        TAB 1
-       写真計測
-       ========================= -->
+       ===================================================== -->
 
   <div id="tab-measure" class="tab-content active">
 
@@ -544,9 +437,7 @@
 
       <div class="file-input-wrapper">
 
-        <label
-          class="btn-action"
-          for="cameraInput">
+        <label class="btn-action" for="cameraInput">
           📸 透視写真を撮影 / 選択
         </label>
 
@@ -563,9 +454,6 @@
         </button>
 
       </div>
-
-
-      <!-- ズーム操作 -->
 
       <div class="zoom-controls">
 
@@ -598,39 +486,23 @@
 
       </div>
 
-
-      <!-- ガイド -->
-
-      <div
-        class="step-guide"
-        id="guideText">
-
+      <div class="step-guide" id="guideText">
         1.
         <strong>基準水平線の端点 H1</strong>
         （涙滴線等）をタップ
-
       </div>
 
-
-      <!-- Canvas -->
-
       <div class="canvas-container">
-
         <canvas
           id="photoCanvas"
           width="540"
           height="360">
         </canvas>
-
       </div>
-
-
-      <!-- 計測結果 -->
 
       <div class="results-row">
 
         <div class="res-box">
-
           <div class="res-title">
             基準補正 外方傾斜角 (RI)
           </div>
@@ -639,25 +511,26 @@
             <span id="measuredInc">--</span>
             <span style="font-size:1rem;">°</span>
           </div>
-
         </div>
 
-
         <div class="res-box">
-
           <div class="res-title">
-            実測 前捻角 (RA / Liaw)
+            実測 前捻角 (RA)
           </div>
 
           <div class="res-val">
             <span id="measuredAnte">--</span>
             <span style="font-size:1rem;">°</span>
           </div>
-
         </div>
 
       </div>
 
+      <div
+        class="measurement-info"
+        id="measurementInfo">
+        C-DはA-Bに対する垂直成分を短軸として自動補正します
+      </div>
 
       <div
         style="
@@ -667,14 +540,15 @@
           line-height:1.5;
         ">
 
-        ※ 緑：基準線(H1-H2) |
+        緑：基準線(H1-H2) |
         赤：長軸(A-B) |
-        青：短軸(C-D)
+        青：指定C-D |
+        水色点線：補正短軸
 
         <br>
 
         2本指でピンチ拡大・移動、
-        1本指で打点・ドラッグ微調整が可能です。
+        1本指で打点・ドラッグ微調整
 
       </div>
 
@@ -682,11 +556,9 @@
 
   </div>
 
-
-  <!-- =========================
+  <!-- =====================================================
        TAB 2
-       シミュレーター
-       ========================= -->
+       ===================================================== -->
 
   <div id="tab-simulate" class="tab-content">
 
@@ -706,7 +578,6 @@
       </button>
 
     </div>
-
 
     <div class="grid-inputs">
 
@@ -730,7 +601,6 @@
 
       </div>
 
-
       <div class="input-group">
 
         <label for="deltaPT">
@@ -751,7 +621,6 @@
 
       </div>
 
-
       <div class="input-group">
 
         <label for="cupInc">
@@ -771,7 +640,6 @@
         </div>
 
       </div>
-
 
       <div class="input-group">
 
@@ -797,7 +665,6 @@
 
     </div>
 
-
     <div class="results-row">
 
       <div class="res-box">
@@ -807,17 +674,11 @@
         </div>
 
         <div class="res-val">
-
           <span id="targetCupAnte">--</span>
-
-          <span style="font-size:1rem;">
-            °
-          </span>
-
+          <span style="font-size:1rem;">°</span>
         </div>
 
       </div>
-
 
       <div class="res-box">
 
@@ -826,19 +687,13 @@
         </div>
 
         <div class="res-val">
-
           <span id="apparentInc">--</span>
-
-          <span style="font-size:1rem;">
-            °
-          </span>
-
+          <span style="font-size:1rem;">°</span>
         </div>
 
       </div>
 
     </div>
-
 
     <div class="viewer-panel">
 
@@ -853,7 +708,6 @@
         </span>
 
       </div>
-
 
       <svg
         id="fluoroSvg"
@@ -887,14 +741,12 @@
           stroke-dasharray="2 2">
         </circle>
 
-
         <path
           id="cupDome"
-          fill="rgba(56, 189, 248, 0.15)"
+          fill="rgba(56,189,248,0.15)"
           stroke="#0284c7"
           stroke-width="1.5">
         </path>
-
 
         <ellipse
           id="cupEllipse"
@@ -902,11 +754,10 @@
           cy="0"
           rx="85"
           ry="30"
-          fill="rgba(56, 189, 248, 0.3)"
+          fill="rgba(56,189,248,0.3)"
           stroke="#38bdf8"
           stroke-width="2.5">
         </ellipse>
-
 
         <line
           id="majorAxisLine"
@@ -919,7 +770,6 @@
         </line>
 
       </svg>
-
 
       <div
         id="ellipseParams"
@@ -937,12 +787,11 @@
 
 </div>
 
-
 <script>
 "use strict";
 
 /* =========================================================
-   基本DOM
+   DOM
    ========================================================= */
 
 const measureTabButton =
@@ -956,6 +805,30 @@ const measureTab =
 
 const simulateTab =
   document.getElementById("tab-simulate");
+
+const fileInput =
+  document.getElementById("cameraInput");
+
+const canvas =
+  document.getElementById("photoCanvas");
+
+const ctx =
+  canvas.getContext("2d");
+
+const guideText =
+  document.getElementById("guideText");
+
+const zoomLevelDisp =
+  document.getElementById("zoomLevel");
+
+const measuredIncDisp =
+  document.getElementById("measuredInc");
+
+const measuredAnteDisp =
+  document.getElementById("measuredAnte");
+
+const measurementInfo =
+  document.getElementById("measurementInfo");
 
 
 /* =========================================================
@@ -984,41 +857,15 @@ function switchTab(tabName) {
   }
 }
 
+measureTabButton.addEventListener(
+  "click",
+  () => switchTab("measure")
+);
 
-measureTabButton.addEventListener("click", function () {
-  switchTab("measure");
-});
-
-
-simulateTabButton.addEventListener("click", function () {
-  switchTab("simulate");
-});
-
-
-/* =========================================================
-   Canvas
-   ========================================================= */
-
-const fileInput =
-  document.getElementById("cameraInput");
-
-const canvas =
-  document.getElementById("photoCanvas");
-
-const ctx =
-  canvas.getContext("2d");
-
-const guideText =
-  document.getElementById("guideText");
-
-const zoomLevelDisp =
-  document.getElementById("zoomLevel");
-
-const measuredIncDisp =
-  document.getElementById("measuredInc");
-
-const measuredAnteDisp =
-  document.getElementById("measuredAnte");
+simulateTabButton.addEventListener(
+  "click",
+  () => switchTab("simulate")
+);
 
 
 /* =========================================================
@@ -1031,15 +878,6 @@ let currentObjectURL = null;
 
 let imageLoaded = false;
 
-
-/*
- iPhoneの写真は非常に巨大なことがあるため、
- Canvas内部画像を適度に縮小する。
-
- 計測は比率・角度なので、
- 等方的縮小なら計測値に影響しない。
-*/
-
 const MAX_IMAGE_DIMENSION = 1800;
 
 
@@ -1051,38 +889,19 @@ let points = [];
 
 let draggingIdx = -1;
 
-
 const pointMeta = [
 
-  {
-    label: "H1",
-    color: "#10b981"
-  },
+  { label: "H1", color: "#10b981" },
 
-  {
-    label: "H2",
-    color: "#10b981"
-  },
+  { label: "H2", color: "#10b981" },
 
-  {
-    label: "A",
-    color: "#ef4444"
-  },
+  { label: "A", color: "#ef4444" },
 
-  {
-    label: "B",
-    color: "#ef4444"
-  },
+  { label: "B", color: "#ef4444" },
 
-  {
-    label: "C",
-    color: "#38bdf8"
-  },
+  { label: "C", color: "#38bdf8" },
 
-  {
-    label: "D",
-    color: "#38bdf8"
-  }
+  { label: "D", color: "#38bdf8" }
 
 ];
 
@@ -1094,35 +913,41 @@ const pointMeta = [
 let scale = 1.0;
 
 let panX = 0;
+
 let panY = 0;
 
 const MIN_SCALE = 1.0;
+
 const MAX_SCALE = 6.0;
 
 
 /* =========================================================
-   Pointer管理
+   Pointer
    ========================================================= */
 
 const activePointers = new Map();
 
 let pinchStartDistance = 0;
+
 let pinchStartScale = 1;
 
 let pinchStartMidX = 0;
+
 let pinchStartMidY = 0;
 
 let pinchStartPanX = 0;
+
 let pinchStartPanY = 0;
 
 
 /* =========================================================
-   初期Canvas
+   Canvas初期化
    ========================================================= */
 
 function initializeCanvas() {
 
   canvas.width = 540;
+
   canvas.height = 360;
 
   imageLoaded = false;
@@ -1130,91 +955,87 @@ function initializeCanvas() {
   redraw();
 }
 
-
 initializeCanvas();
 
 
 /* =========================================================
-   写真選択
+   写真読み込み
    ========================================================= */
 
-fileInput.addEventListener("change", function (event) {
+fileInput.addEventListener(
+  "change",
+  function (event) {
 
-  const file =
-    event.target.files &&
-    event.target.files[0];
+    const file =
+      event.target.files &&
+      event.target.files[0];
 
-  if (!file) {
-    return;
-  }
-
-
-  /*
-   前のObject URLを解放
-  */
-
-  if (currentObjectURL) {
-
-    URL.revokeObjectURL(currentObjectURL);
-
-    currentObjectURL = null;
-  }
-
-
-  currentObjectURL =
-    URL.createObjectURL(file);
-
-
-  const newImage =
-    new Image();
-
-
-  newImage.onload = function () {
-
-    img = newImage;
-
-    imageLoaded = true;
-
-    setupCanvasFromImage();
-
-    resetPoints();
-
-    resetZoom();
-
-
-    /*
-     読み込み後にObject URLを解放しても
-     Image自体は使用できる。
-    */
+    if (!file) {
+      return;
+    }
 
     if (currentObjectURL) {
 
-      URL.revokeObjectURL(currentObjectURL);
+      URL.revokeObjectURL(
+        currentObjectURL
+      );
 
       currentObjectURL = null;
     }
-  };
 
+    currentObjectURL =
+      URL.createObjectURL(file);
 
-  newImage.onerror = function () {
+    const newImage =
+      new Image();
 
-    alert(
-      "画像を読み込めませんでした。JPEGまたはPNG画像で再度お試しください。"
-    );
+    newImage.onload =
+      function () {
 
-    imageLoaded = false;
+        img =
+          newImage;
 
-    initializeCanvas();
-  };
+        imageLoaded =
+          true;
 
+        setupCanvasFromImage();
 
-  newImage.src =
-    currentObjectURL;
-});
+        resetPoints();
+
+        resetZoom();
+
+        if (currentObjectURL) {
+
+          URL.revokeObjectURL(
+            currentObjectURL
+          );
+
+          currentObjectURL =
+            null;
+        }
+      };
+
+    newImage.onerror =
+      function () {
+
+        alert(
+          "画像を読み込めませんでした。JPEGまたはPNG画像で再度お試しください。"
+        );
+
+        imageLoaded =
+          false;
+
+        initializeCanvas();
+      };
+
+    newImage.src =
+      currentObjectURL;
+  }
+);
 
 
 /* =========================================================
-   Canvasサイズ設定
+   Canvas画像サイズ
    ========================================================= */
 
 function setupCanvasFromImage() {
@@ -1230,13 +1051,11 @@ function setupCanvasFromImage() {
     return;
   }
 
-
   const naturalWidth =
     img.naturalWidth;
 
   const naturalHeight =
     img.naturalHeight;
-
 
   const largestDimension =
     Math.max(
@@ -1244,38 +1063,37 @@ function setupCanvasFromImage() {
       naturalHeight
     );
 
-
   const resizeScale =
     Math.min(
       1,
-      MAX_IMAGE_DIMENSION / largestDimension
+      MAX_IMAGE_DIMENSION /
+      largestDimension
     );
-
 
   canvas.width =
     Math.max(
       1,
       Math.round(
-        naturalWidth * resizeScale
+        naturalWidth *
+        resizeScale
       )
     );
-
 
   canvas.height =
     Math.max(
       1,
       Math.round(
-        naturalHeight * resizeScale
+        naturalHeight *
+        resizeScale
       )
     );
-
 
   redraw();
 }
 
 
 /* =========================================================
-   点リセット
+   リセット
    ========================================================= */
 
 function resetPoints() {
@@ -1290,11 +1108,13 @@ function resetPoints() {
   measuredAnteDisp.textContent =
     "--";
 
+  measurementInfo.textContent =
+    "C-DはA-Bに対する垂直成分を短軸として自動補正します";
+
   updateGuide();
 
   redraw();
 }
-
 
 document
   .getElementById("resetPointsButton")
@@ -1313,7 +1133,6 @@ function adjustZoom(factor) {
   const oldScale =
     scale;
 
-
   const newScale =
     Math.min(
       MAX_SCALE,
@@ -1323,22 +1142,15 @@ function adjustZoom(factor) {
       )
     );
 
-
   if (newScale === oldScale) {
     return;
   }
-
-
-  /*
-   Canvas中央をズーム中心にする
-  */
 
   const centerX =
     canvas.width / 2;
 
   const centerY =
     canvas.height / 2;
-
 
   const imageX =
     (centerX - panX) /
@@ -1348,10 +1160,8 @@ function adjustZoom(factor) {
     (centerY - panY) /
     oldScale;
 
-
   scale =
     newScale;
-
 
   panX =
     centerX -
@@ -1360,7 +1170,6 @@ function adjustZoom(factor) {
   panY =
     centerY -
     imageY * scale;
-
 
   clampPan();
 
@@ -1375,6 +1184,7 @@ function resetZoom() {
   scale = 1.0;
 
   panX = 0;
+
   panY = 0;
 
   updateZoomDisplay();
@@ -1392,20 +1202,16 @@ function updateZoomDisplay() {
 }
 
 
-/* =========================================================
-   Pan制限
-   ========================================================= */
-
 function clampPan() {
 
   if (scale <= 1) {
 
     panX = 0;
+
     panY = 0;
 
     return;
   }
-
 
   const minX =
     canvas.width *
@@ -1415,7 +1221,6 @@ function clampPan() {
     canvas.height *
     (1 - scale);
 
-
   panX =
     Math.min(
       0,
@@ -1424,7 +1229,6 @@ function clampPan() {
         panX
       )
     );
-
 
   panY =
     Math.min(
@@ -1437,33 +1241,19 @@ function clampPan() {
 }
 
 
-/* =========================================================
-   ボタンZoom
-   ========================================================= */
-
 document
   .getElementById("zoomInButton")
   .addEventListener(
     "click",
-    function () {
-
-      adjustZoom(1.25);
-
-    }
+    () => adjustZoom(1.25)
   );
-
 
 document
   .getElementById("zoomOutButton")
   .addEventListener(
     "click",
-    function () {
-
-      adjustZoom(0.8);
-
-    }
+    () => adjustZoom(0.8)
   );
-
 
 document
   .getElementById("zoomResetButton")
@@ -1484,7 +1274,6 @@ function clientToCanvasCoords(
 
   const rect =
     canvas.getBoundingClientRect();
-
 
   return {
 
@@ -1519,10 +1308,6 @@ function screenToImageCoords(
 }
 
 
-/* =========================================================
-   Pointer utility
-   ========================================================= */
-
 function getPointerDistance(
   p1,
   p2
@@ -1553,6 +1338,252 @@ function getPointerMidpoint(
 
 
 /* =========================================================
+   新しい短軸補正ロジック
+   ========================================================= */
+
+/*
+  A-B を長軸ベクトルとする。
+
+       AB = (dx, dy)
+
+  単位長軸ベクトル：
+
+       u = AB / |AB|
+
+  その長軸に垂直な単位ベクトル：
+
+       n = (-uy, ux)
+
+  C-Dベクトル：
+
+       CD = D - C
+
+  C-Dの長軸垂直方向成分は
+
+       CD_perp = CD・n
+
+  したがって補正短軸長は
+
+       b = |CD・n|
+
+  これは2次元cross productを使えば
+
+       b = |AB × CD| / |AB|
+
+  と同じ。
+
+  C-Dが斜めでも、A-B方向へ混入した
+  成分を除去できる。
+*/
+
+function getCorrectedMinorAxis() {
+
+  if (points.length < 6) {
+    return null;
+  }
+
+  const A =
+    points[2];
+
+  const B =
+    points[3];
+
+  const C =
+    points[4];
+
+  const D =
+    points[5];
+
+  const abX =
+    B.x - A.x;
+
+  const abY =
+    B.y - A.y;
+
+  const majorLength =
+    Math.hypot(
+      abX,
+      abY
+    );
+
+  if (majorLength <= 0) {
+    return null;
+  }
+
+  /*
+    長軸単位ベクトル
+  */
+
+  const ux =
+    abX /
+    majorLength;
+
+  const uy =
+    abY /
+    majorLength;
+
+  /*
+    長軸に垂直な単位ベクトル
+  */
+
+  const nx =
+    -uy;
+
+  const ny =
+    ux;
+
+  /*
+    C-Dベクトル
+  */
+
+  const cdX =
+    D.x - C.x;
+
+  const cdY =
+    D.y - C.y;
+
+  const rawCDLength =
+    Math.hypot(
+      cdX,
+      cdY
+    );
+
+  /*
+    C-Dを長軸垂直方向へ射影
+  */
+
+  const signedPerpendicularLength =
+    cdX * nx +
+    cdY * ny;
+
+  const correctedMinorLength =
+    Math.abs(
+      signedPerpendicularLength
+    );
+
+  /*
+    C-Dの中点を基準として
+    補正短軸線を描画する。
+
+    これによりユーザーが指定したC-Dと
+    実際に計算に使われた垂直成分を
+    視覚的に比較できる。
+  */
+
+  const centerX =
+    (C.x + D.x) / 2;
+
+  const centerY =
+    (C.y + D.y) / 2;
+
+  const halfSigned =
+    signedPerpendicularLength / 2;
+
+  const correctedC = {
+
+    x:
+      centerX -
+      nx * halfSigned,
+
+    y:
+      centerY -
+      ny * halfSigned
+
+  };
+
+  const correctedD = {
+
+    x:
+      centerX +
+      nx * halfSigned,
+
+    y:
+      centerY +
+      ny * halfSigned
+
+  };
+
+  /*
+    C-DがA-Bに対してどれだけ
+    垂直に近いかも計算する。
+
+    完全垂直なら90°。
+  */
+
+  let angleCDvsAB = 0;
+
+  if (rawCDLength > 0) {
+
+    const dot =
+      (
+        abX * cdX +
+        abY * cdY
+      ) /
+      (
+        majorLength *
+        rawCDLength
+      );
+
+    const safeDot =
+      Math.max(
+        -1,
+        Math.min(
+          1,
+          dot
+        )
+      );
+
+    let angle =
+      Math.acos(
+        Math.abs(
+          safeDot
+        )
+      ) *
+      180 /
+      Math.PI;
+
+    /*
+      0～90°
+    */
+
+    angleCDvsAB =
+      angle;
+  }
+
+  return {
+
+    majorLength:
+      majorLength,
+
+    rawMinorLength:
+      rawCDLength,
+
+    correctedMinorLength:
+      correctedMinorLength,
+
+    signedPerpendicularLength:
+      signedPerpendicularLength,
+
+    correctedC:
+      correctedC,
+
+    correctedD:
+      correctedD,
+
+    perpendicularAngle:
+      angleCDvsAB,
+
+    nx:
+      nx,
+
+    ny:
+      ny
+
+  };
+}
+
+
+/* =========================================================
    Pointer Down
    ========================================================= */
 
@@ -1562,9 +1593,7 @@ function handlePointerDown(event) {
     return;
   }
 
-
   event.preventDefault();
-
 
   try {
 
@@ -1573,14 +1602,7 @@ function handlePointerDown(event) {
     );
 
   } catch (error) {
-
-    /*
-     古いSafariなどで失敗しても
-     処理継続
-    */
-
   }
-
 
   const pos =
     clientToCanvasCoords(
@@ -1588,30 +1610,26 @@ function handlePointerDown(event) {
       event.clientY
     );
 
-
   activePointers.set(
     event.pointerId,
     pos
   );
 
-
   /*
-   2本指になったら
-   pinch開始
+    2本指
   */
 
   if (
     activePointers.size === 2
   ) {
 
-    draggingIdx = -1;
-
+    draggingIdx =
+      -1;
 
     const pointerArray =
       Array.from(
         activePointers.values()
       );
-
 
     const p1 =
       pointerArray[0];
@@ -1619,17 +1637,14 @@ function handlePointerDown(event) {
     const p2 =
       pointerArray[1];
 
-
     pinchStartDistance =
       getPointerDistance(
         p1,
         p2
       );
 
-
     pinchStartScale =
       scale;
-
 
     const mid =
       getPointerMidpoint(
@@ -1637,13 +1652,11 @@ function handlePointerDown(event) {
         p2
       );
 
-
     pinchStartMidX =
       mid.x;
 
     pinchStartMidY =
       mid.y;
-
 
     pinchStartPanX =
       panX;
@@ -1651,22 +1664,14 @@ function handlePointerDown(event) {
     pinchStartPanY =
       panY;
 
-
     return;
   }
-
-
-  /*
-   1本指の場合
-  */
 
   if (
     activePointers.size !== 1
   ) {
-
     return;
   }
-
 
   const screenX =
     pos.x;
@@ -1674,34 +1679,22 @@ function handlePointerDown(event) {
   const screenY =
     pos.y;
 
-
-  /*
-   既存点に近いか判定。
-
-   表示上約30px程度を狙えるように
-   CSSピクセルとの比率を考慮。
-  */
-
   const rect =
     canvas.getBoundingClientRect();
-
 
   const cssToCanvas =
     canvas.width /
     rect.width;
 
-
   const hitRadius =
     30 *
     cssToCanvas;
-
 
   let nearestIdx =
     -1;
 
   let minDist =
     hitRadius;
-
 
   for (
     let i = 0;
@@ -1714,12 +1707,10 @@ function handlePointerDown(event) {
       scale +
       panX;
 
-
     const pointScreenY =
       points[i].y *
       scale +
       panY;
-
 
     const distance =
       Math.hypot(
@@ -1729,7 +1720,6 @@ function handlePointerDown(event) {
         pointScreenY -
         screenY
       );
-
 
     if (
       distance <
@@ -1744,9 +1734,8 @@ function handlePointerDown(event) {
     }
   }
 
-
   /*
-   既存点ドラッグ
+    既存点ドラッグ
   */
 
   if (
@@ -1761,9 +1750,8 @@ function handlePointerDown(event) {
     return;
   }
 
-
   /*
-   新規打点
+    新規打点
   */
 
   if (
@@ -1775,7 +1763,6 @@ function handlePointerDown(event) {
         screenX,
         screenY
       );
-
 
     points.push({
 
@@ -1799,18 +1786,14 @@ function handlePointerDown(event) {
 
     });
 
-
     updateGuide();
-
 
     if (
       points.length === 6
     ) {
 
       calculateMeasuredAngles();
-
     }
-
 
     redraw();
   }
@@ -1828,13 +1811,10 @@ function handlePointerMove(event) {
       event.pointerId
     )
   ) {
-
     return;
   }
 
-
   event.preventDefault();
-
 
   const pos =
     clientToCanvasCoords(
@@ -1842,16 +1822,13 @@ function handlePointerMove(event) {
       event.clientY
     );
 
-
   activePointers.set(
     event.pointerId,
     pos
   );
 
-
   /*
-   2本指：
-   pinch + pan
+    2本指
   */
 
   if (
@@ -1863,13 +1840,11 @@ function handlePointerMove(event) {
         activePointers.values()
       );
 
-
     const p1 =
       pointerArray[0];
 
     const p2 =
       pointerArray[1];
-
 
     const distance =
       getPointerDistance(
@@ -1877,13 +1852,11 @@ function handlePointerMove(event) {
         p2
       );
 
-
     const mid =
       getPointerMidpoint(
         p1,
         p2
       );
-
 
     if (
       pinchStartDistance > 0
@@ -1892,7 +1865,6 @@ function handlePointerMove(event) {
       const scaleFactor =
         distance /
         pinchStartDistance;
-
 
       const newScale =
         Math.min(
@@ -1904,19 +1876,12 @@ function handlePointerMove(event) {
           )
         );
 
-
-      /*
-       pinch開始時の中心位置にあった
-       画像座標を求める
-      */
-
       const imageAnchorX =
         (
           pinchStartMidX -
           pinchStartPanX
         ) /
         pinchStartScale;
-
 
       const imageAnchorY =
         (
@@ -1925,27 +1890,18 @@ function handlePointerMove(event) {
         ) /
         pinchStartScale;
 
-
       scale =
         newScale;
-
-
-      /*
-       現在の指の中心が
-       同じ画像位置を指すようにする
-      */
 
       panX =
         mid.x -
         imageAnchorX *
         scale;
 
-
       panY =
         mid.y -
         imageAnchorY *
         scale;
-
 
       clampPan();
 
@@ -1954,14 +1910,11 @@ function handlePointerMove(event) {
       redraw();
     }
 
-
     return;
   }
 
-
   /*
-   1本指：
-   点ドラッグ
+    点ドラッグ
   */
 
   if (
@@ -1975,7 +1928,6 @@ function handlePointerMove(event) {
         pos.y
       );
 
-
     points[draggingIdx].x =
       Math.max(
         0,
@@ -1984,7 +1936,6 @@ function handlePointerMove(event) {
           imagePos.x
         )
       );
-
 
     points[draggingIdx].y =
       Math.max(
@@ -1995,15 +1946,12 @@ function handlePointerMove(event) {
         )
       );
 
-
     if (
       points.length === 6
     ) {
 
       calculateMeasuredAngles();
-
     }
-
 
     redraw();
   }
@@ -2011,7 +1959,7 @@ function handlePointerMove(event) {
 
 
 /* =========================================================
-   Pointer Up
+   Pointer End
    ========================================================= */
 
 function handlePointerEnd(event) {
@@ -2020,10 +1968,8 @@ function handlePointerEnd(event) {
     event.pointerId
   );
 
-
   draggingIdx =
     -1;
-
 
   if (
     activePointers.size < 2
@@ -2032,7 +1978,6 @@ function handlePointerEnd(event) {
     pinchStartDistance =
       0;
   }
-
 
   try {
 
@@ -2046,61 +1991,38 @@ function handlePointerEnd(event) {
       canvas.releasePointerCapture(
         event.pointerId
       );
-
     }
 
   } catch (error) {
-
-    /*
-     Safari対策
-    */
-
   }
-
 
   redraw();
 }
 
 
-/* =========================================================
-   Pointer Events
-   ========================================================= */
-
 canvas.addEventListener(
   "pointerdown",
   handlePointerDown,
-  {
-    passive: false
-  }
+  { passive: false }
 );
-
 
 canvas.addEventListener(
   "pointermove",
   handlePointerMove,
-  {
-    passive: false
-  }
+  { passive: false }
 );
-
 
 canvas.addEventListener(
   "pointerup",
   handlePointerEnd,
-  {
-    passive: false
-  }
+  { passive: false }
 );
-
 
 canvas.addEventListener(
   "pointercancel",
   handlePointerEnd,
-  {
-    passive: false
-  }
+  { passive: false }
 );
-
 
 canvas.addEventListener(
   "lostpointercapture",
@@ -2117,13 +2039,12 @@ canvas.addEventListener(
       0;
 
     redraw();
-
   }
 );
 
 
 /* =========================================================
-   PCマウスホイールZoom
+   Wheel zoom
    ========================================================= */
 
 canvas.addEventListener(
@@ -2132,17 +2053,10 @@ canvas.addEventListener(
 
     event.preventDefault();
 
-
     const factor =
       event.deltaY < 0
         ? 1.15
         : 0.87;
-
-
-    /*
-     マウスポインタを中心に
-     ズーム
-    */
 
     const mouse =
       clientToCanvasCoords(
@@ -2150,10 +2064,8 @@ canvas.addEventListener(
         event.clientY
       );
 
-
     const oldScale =
       scale;
-
 
     const newScale =
       Math.min(
@@ -2165,14 +2077,11 @@ canvas.addEventListener(
         )
       );
 
-
     if (
       newScale === oldScale
     ) {
-
       return;
     }
-
 
     const imageX =
       (
@@ -2181,7 +2090,6 @@ canvas.addEventListener(
       ) /
       oldScale;
 
-
     const imageY =
       (
         mouse.y -
@@ -2189,30 +2097,26 @@ canvas.addEventListener(
       ) /
       oldScale;
 
-
     scale =
       newScale;
-
 
     panX =
       mouse.x -
       imageX *
       scale;
 
-
     panY =
       mouse.y -
       imageY *
       scale;
-
 
     clampPan();
 
     updateZoomDisplay();
 
     redraw();
-
   },
+
   {
     passive: false
   }
@@ -2227,7 +2131,6 @@ function updateGuide() {
 
   const count =
     points.length;
-
 
   if (count === 0) {
 
@@ -2262,27 +2165,20 @@ function updateGuide() {
   } else {
 
     guideText.innerHTML =
-      '✅ <strong>計測完了</strong>（各点をドラッグ微調整可）';
-
+      '✅ <strong>計測完了</strong>（C-Dの斜め成分は自動補正・各点ドラッグ可）';
   }
 }
 
 
 /* =========================================================
-   再描画
+   描画
    ========================================================= */
 
 function redraw() {
 
   ctx.setTransform(
-    1,
-    0,
-    0,
-    1,
-    0,
-    0
+    1, 0, 0, 1, 0, 0
   );
-
 
   ctx.clearRect(
     0,
@@ -2291,16 +2187,10 @@ function redraw() {
     canvas.height
   );
 
-
-  /*
-   画像未読み込み
-  */
-
   if (!imageLoaded) {
 
     ctx.fillStyle =
       "#1e293b";
-
 
     ctx.fillRect(
       0,
@@ -2309,22 +2199,17 @@ function redraw() {
       canvas.height
     );
 
-
     ctx.fillStyle =
       "#94a3b8";
-
 
     ctx.font =
       "16px -apple-system, sans-serif";
 
-
     ctx.textAlign =
       "center";
 
-
     ctx.textBaseline =
       "middle";
-
 
     ctx.fillText(
       "写真を撮影または選択してください",
@@ -2332,29 +2217,24 @@ function redraw() {
       canvas.height / 2
     );
 
-
     return;
   }
 
-
   ctx.save();
-
 
   ctx.translate(
     panX,
     panY
   );
 
-
   ctx.scale(
     scale,
     scale
   );
 
-
-  /* -------------------------
-     画像
-     ------------------------- */
+  /*
+    画像
+  */
 
   ctx.drawImage(
     img,
@@ -2364,10 +2244,9 @@ function redraw() {
     canvas.height
   );
 
-
-  /* -------------------------
-     H1-H2
-     ------------------------- */
+  /*
+    基準線
+  */
 
   if (
     points.length >= 2
@@ -2376,57 +2255,43 @@ function redraw() {
     ctx.strokeStyle =
       "#10b981";
 
-
     ctx.lineWidth =
-      2.5 /
-      scale;
-
+      2.5 / scale;
 
     ctx.beginPath();
-
 
     ctx.moveTo(
       points[0].x,
       points[0].y
     );
 
-
     ctx.lineTo(
       points[1].x,
       points[1].y
     );
 
-
     ctx.stroke();
-
 
     const dxH =
       points[1].x -
       points[0].x;
 
-
     const dyH =
       points[1].y -
       points[0].y;
 
-
     ctx.strokeStyle =
       "rgba(16,185,129,0.45)";
 
-
     ctx.lineWidth =
-      1.5 /
-      scale;
-
+      1.5 / scale;
 
     ctx.setLineDash([
       5 / scale,
       5 / scale
     ]);
 
-
     ctx.beginPath();
-
 
     ctx.moveTo(
       points[0].x -
@@ -2436,7 +2301,6 @@ function redraw() {
       dyH * 2
     );
 
-
     ctx.lineTo(
       points[1].x +
       dxH * 2,
@@ -2445,17 +2309,14 @@ function redraw() {
       dyH * 2
     );
 
-
     ctx.stroke();
-
 
     ctx.setLineDash([]);
   }
 
-
-  /* -------------------------
-     長軸 A-B
-     ------------------------- */
+  /*
+    長軸 A-B
+  */
 
   if (
     points.length >= 4
@@ -2464,189 +2325,180 @@ function redraw() {
     ctx.strokeStyle =
       "#ef4444";
 
-
     ctx.lineWidth =
-      2.5 /
-      scale;
-
+      2.5 / scale;
 
     ctx.beginPath();
-
 
     ctx.moveTo(
       points[2].x,
       points[2].y
     );
 
-
     ctx.lineTo(
       points[3].x,
       points[3].y
     );
 
-
     ctx.stroke();
   }
 
-
-  /* -------------------------
-     短軸 C-D
-     ------------------------- */
+  /*
+    C-D 元の指定線
+  */
 
   if (
     points.length === 6
   ) {
 
     ctx.strokeStyle =
-      "#38bdf8";
-
+      "rgba(56,189,248,0.55)";
 
     ctx.lineWidth =
-      2.5 /
-      scale;
-
+      2 / scale;
 
     ctx.beginPath();
-
 
     ctx.moveTo(
       points[4].x,
       points[4].y
     );
 
-
     ctx.lineTo(
       points[5].x,
       points[5].y
     );
 
-
     ctx.stroke();
 
 
-    /* -------------------------
-       楕円
-       ------------------------- */
+    /*
+      補正短軸
+    */
 
-    const midX =
-      (
-        points[2].x +
-        points[3].x
-      ) /
-      2;
+    const corrected =
+      getCorrectedMinorAxis();
 
-
-    const midY =
-      (
-        points[2].y +
-        points[3].y
-      ) /
-      2;
-
-
-    const majorLen =
-      Math.hypot(
-        points[3].x -
-        points[2].x,
-
-        points[3].y -
-        points[2].y
-      );
-
-
-    const minorLen =
-      Math.hypot(
-        points[5].x -
-        points[4].x,
-
-        points[5].y -
-        points[4].y
-      );
-
-
-    const angle =
-      Math.atan2(
-        points[3].y -
-        points[2].y,
-
-        points[3].x -
-        points[2].x
-      );
-
-
-    if (
-      majorLen > 0 &&
-      minorLen > 0
-    ) {
-
-      ctx.save();
-
-
-      ctx.translate(
-        midX,
-        midY
-      );
-
-
-      ctx.rotate(
-        angle
-      );
-
+    if (corrected) {
 
       ctx.strokeStyle =
-        "rgba(56,189,248,0.85)";
-
+        "#67e8f9";
 
       ctx.lineWidth =
-        2 /
-        scale;
-
+        3 / scale;
 
       ctx.setLineDash([
-        5 / scale,
-        5 / scale
+        6 / scale,
+        4 / scale
       ]);
-
 
       ctx.beginPath();
 
-
-      ctx.ellipse(
-        0,
-        0,
-
-        majorLen / 2,
-        minorLen / 2,
-
-        0,
-        0,
-        Math.PI * 2
+      ctx.moveTo(
+        corrected.correctedC.x,
+        corrected.correctedC.y
       );
 
+      ctx.lineTo(
+        corrected.correctedD.x,
+        corrected.correctedD.y
+      );
 
       ctx.stroke();
 
+      ctx.setLineDash([]);
 
-      ctx.restore();
+
+      /*
+        補正後楕円
+      */
+
+      const midX =
+        (
+          points[2].x +
+          points[3].x
+        ) / 2;
+
+      const midY =
+        (
+          points[2].y +
+          points[3].y
+        ) / 2;
+
+      const angle =
+        Math.atan2(
+          points[3].y -
+          points[2].y,
+
+          points[3].x -
+          points[2].x
+        );
+
+      if (
+        corrected.majorLength > 0 &&
+        corrected.correctedMinorLength > 0
+      ) {
+
+        ctx.save();
+
+        ctx.translate(
+          midX,
+          midY
+        );
+
+        ctx.rotate(
+          angle
+        );
+
+        ctx.strokeStyle =
+          "rgba(56,189,248,0.9)";
+
+        ctx.lineWidth =
+          2 / scale;
+
+        ctx.setLineDash([
+          5 / scale,
+          5 / scale
+        ]);
+
+        ctx.beginPath();
+
+        ctx.ellipse(
+          0,
+          0,
+
+          corrected.majorLength / 2,
+
+          Math.min(
+            corrected.correctedMinorLength,
+            corrected.majorLength
+          ) / 2,
+
+          0,
+          0,
+          Math.PI * 2
+        );
+
+        ctx.stroke();
+
+        ctx.restore();
+      }
     }
   }
 
 
-  /* -------------------------
-     点
-     ------------------------- */
+  /*
+    点
+  */
 
   points.forEach(
-    function (point, index) {
+    function (
+      point,
+      index
+    ) {
 
       const meta =
         pointMeta[index];
-
-
-      /*
-       拡大してもマーカーが
-       極端に大きくならないようにする
-      */
 
       const radius =
         (
@@ -2656,13 +2508,10 @@ function redraw() {
         ) /
         scale;
 
-
       ctx.fillStyle =
         meta.color;
 
-
       ctx.beginPath();
-
 
       ctx.arc(
         point.x,
@@ -2672,46 +2521,29 @@ function redraw() {
         Math.PI * 2
       );
 
-
       ctx.fill();
-
 
       ctx.strokeStyle =
         "#ffffff";
 
-
       ctx.lineWidth =
-        2 /
-        scale;
-
+        2 / scale;
 
       ctx.stroke();
-
-
-      /*
-       ラベル
-      */
 
       ctx.fillStyle =
         "#ffffff";
 
-
       ctx.font =
         "bold " +
-        (
-          13 /
-          scale
-        ) +
+        (13 / scale) +
         "px -apple-system, sans-serif";
-
 
       ctx.textAlign =
         "left";
 
-
       ctx.textBaseline =
         "alphabetic";
-
 
       ctx.fillText(
         meta.label,
@@ -2722,10 +2554,8 @@ function redraw() {
         point.y -
         9 / scale
       );
-
     }
   );
-
 
   ctx.restore();
 }
@@ -2740,57 +2570,37 @@ function calculateMeasuredAngles() {
   if (
     points.length !== 6
   ) {
-
     return;
   }
 
-
-  const pH1 =
+  const H1 =
     points[0];
 
-  const pH2 =
+  const H2 =
     points[1];
 
-  const pA =
+  const A =
     points[2];
 
-  const pB =
+  const B =
     points[3];
 
-  const pC =
-    points[4];
 
-  const pD =
-    points[5];
-
-
-  /* -------------------------
-     基準線角度
-     ------------------------- */
+  /*
+    RI
+  */
 
   const angleRef =
     Math.atan2(
-      pH2.y -
-      pH1.y,
-
-      pH2.x -
-      pH1.x
+      H2.y - H1.y,
+      H2.x - H1.x
     );
-
-
-  /* -------------------------
-     Cup長軸角度
-     ------------------------- */
 
   const angleCup =
     Math.atan2(
-      pB.y -
-      pA.y,
-
-      pB.x -
-      pA.x
+      B.y - A.y,
+      B.x - A.x
     );
-
 
   let deltaAngle =
     Math.abs(
@@ -2800,16 +2610,9 @@ function calculateMeasuredAngles() {
     180 /
     Math.PI;
 
-
-  /*
-   線には方向がないため
-   0～90°に正規化
-  */
-
   deltaAngle =
     deltaAngle %
     180;
-
 
   if (
     deltaAngle > 90
@@ -2821,32 +2624,16 @@ function calculateMeasuredAngles() {
   }
 
 
-  /* -------------------------
-     長軸・短軸
-     ------------------------- */
+  /*
+    補正短軸
+  */
 
-  const majorLen =
-    Math.hypot(
-      pB.x -
-      pA.x,
-
-      pB.y -
-      pA.y
-    );
-
-
-  const minorLen =
-    Math.hypot(
-      pD.x -
-      pC.x,
-
-      pD.y -
-      pC.y
-    );
-
+  const corrected =
+    getCorrectedMinorAxis();
 
   if (
-    majorLen <= 0
+    !corrected ||
+    corrected.majorLength <= 0
   ) {
 
     measuredIncDisp.textContent =
@@ -2860,8 +2647,7 @@ function calculateMeasuredAngles() {
 
 
   /*
-   ratio > 1 になった場合は
-   数値エラーを避けるため1に制限
+    補正後短長軸比
   */
 
   const ratio =
@@ -2869,14 +2655,16 @@ function calculateMeasuredAngles() {
       1,
       Math.max(
         0,
-        minorLen /
-        majorLen
+        corrected.correctedMinorLength /
+        corrected.majorLength
       )
     );
 
 
   /*
-   RA = asin(b/a)
+    RA = asin(b/a)
+
+    bにはC-DのA-B垂直成分を使用
   */
 
   const anteDeg =
@@ -2890,9 +2678,31 @@ function calculateMeasuredAngles() {
   measuredIncDisp.textContent =
     deltaAngle.toFixed(1);
 
-
   measuredAnteDisp.textContent =
     anteDeg.toFixed(1);
+
+
+  /*
+    補正状態を表示
+  */
+
+  const rawRatio =
+    corrected.rawMinorLength /
+    corrected.majorLength;
+
+  const correctedRatio =
+    corrected.correctedMinorLength /
+    corrected.majorLength;
+
+
+  measurementInfo.textContent =
+    "C-D∠A-B: " +
+    corrected.perpendicularAngle.toFixed(1) +
+    "° / " +
+    "補正前 b/a: " +
+    rawRatio.toFixed(3) +
+    " → 垂直補正 b/a: " +
+    correctedRatio.toFixed(3);
 }
 
 
@@ -2903,7 +2713,6 @@ function calculateMeasuredAngles() {
 let currentSide =
   "right";
 
-
 const stemInput =
   document.getElementById("stemAnte");
 
@@ -2912,7 +2721,6 @@ const ptInput =
 
 const incInput =
   document.getElementById("cupInc");
-
 
 const targetCupAnteDisp =
   document.getElementById("targetCupAnte");
@@ -2936,15 +2744,10 @@ const cupDome =
   document.getElementById("cupDome");
 
 
-/* =========================================================
-   左右
-   ========================================================= */
-
 function setSide(side) {
 
   currentSide =
     side;
-
 
   document
     .getElementById("btnRight")
@@ -2953,14 +2756,12 @@ function setSide(side) {
       side === "right"
     );
 
-
   document
     .getElementById("btnLeft")
     .classList.toggle(
       "active",
       side === "left"
     );
-
 
   viewSideLabel.textContent =
     "イメージ正面像: " +
@@ -2970,7 +2771,6 @@ function setSide(side) {
         : "左股関節"
     );
 
-
   updateSim();
 }
 
@@ -2979,29 +2779,16 @@ document
   .getElementById("btnRight")
   .addEventListener(
     "click",
-    function () {
-
-      setSide("right");
-
-    }
+    () => setSide("right")
   );
-
 
 document
   .getElementById("btnLeft")
   .addEventListener(
     "click",
-    function () {
-
-      setSide("left");
-
-    }
+    () => setSide("left")
   );
 
-
-/* =========================================================
-   Simulator計算
-   ========================================================= */
 
 function updateSim() {
 
@@ -3010,75 +2797,56 @@ function updateSim() {
       stemInput.value
     );
 
-
   let deltaPT =
     parseFloat(
       ptInput.value
     );
-
 
   let inc =
     parseFloat(
       incInput.value
     );
 
-
   if (
     !Number.isFinite(vStem)
   ) {
-
     vStem = 0;
   }
-
 
   if (
     !Number.isFinite(deltaPT)
   ) {
-
     deltaPT = 0;
   }
-
 
   if (
     !Number.isFinite(inc)
   ) {
-
     inc = 40;
   }
 
 
-  /* -------------------------
-     Widmer + PT補正
-     ------------------------- */
+  /*
+    Widmer + PT補正
+  */
 
   const vCup =
     37.3 -
-    0.7 *
-    vStem -
-    deltaPT /
-    2.0;
-
+    0.7 * vStem -
+    deltaPT / 2.0;
 
   targetCupAnteDisp.textContent =
     vCup.toFixed(1);
 
 
-  /* -------------------------
-     幾何
-     ------------------------- */
+  /*
+    幾何
+  */
 
   const incRad =
     inc *
     Math.PI /
     180;
-
-
-  /*
-   SVG表示上は負の前捻で
-   楕円が反転しないように0°で制限。
-
-   数値としてのvCupは上にそのまま表示。
-  */
 
   const visualAnte =
     Math.max(
@@ -3089,23 +2857,19 @@ function updateSim() {
       )
     );
 
-
   const anteRad =
     visualAnte *
     Math.PI /
     180;
 
-
   const a =
     85;
-
 
   const b =
     a *
     Math.sin(
       anteRad
     );
-
 
   const tanApparent =
     Math.tan(
@@ -3115,7 +2879,6 @@ function updateSim() {
       anteRad
     );
 
-
   const apparentIncDeg =
     Math.atan(
       tanApparent
@@ -3123,14 +2886,13 @@ function updateSim() {
     180 /
     Math.PI;
 
-
   apparentIncDisp.textContent =
     apparentIncDeg.toFixed(1);
 
 
-  /* -------------------------
-     左右反転
-     ------------------------- */
+  /*
+    左右
+  */
 
   const rotAngle =
     currentSide === "right"
@@ -3138,21 +2900,19 @@ function updateSim() {
       : -apparentIncDeg;
 
 
-  /* -------------------------
-     楕円
-     ------------------------- */
+  /*
+    SVG
+  */
 
   cupEllipse.setAttribute(
     "rx",
     a
   );
 
-
   cupEllipse.setAttribute(
     "ry",
     Math.abs(b)
   );
-
 
   cupEllipse.setAttribute(
     "transform",
@@ -3160,23 +2920,16 @@ function updateSim() {
     rotAngle +
     ")"
   );
-
-
-  /* -------------------------
-     長軸
-     ------------------------- */
 
   majorAxisLine.setAttribute(
     "x1",
     -a
   );
 
-
   majorAxisLine.setAttribute(
     "x2",
     a
   );
-
 
   majorAxisLine.setAttribute(
     "transform",
@@ -3184,11 +2937,6 @@ function updateSim() {
     rotAngle +
     ")"
   );
-
-
-  /* -------------------------
-     Dome
-     ------------------------- */
 
   const domePath =
     "M " +
@@ -3202,12 +2950,10 @@ function updateSim() {
     a +
     " 0 Z";
 
-
   cupDome.setAttribute(
     "d",
     domePath
   );
-
 
   cupDome.setAttribute(
     "transform",
@@ -3215,11 +2961,6 @@ function updateSim() {
     rotAngle +
     ")"
   );
-
-
-  /* -------------------------
-     表示
-     ------------------------- */
 
   ellipseParamsDisp.textContent =
     "短長軸比(b/a): " +
@@ -3232,21 +2973,15 @@ function updateSim() {
 }
 
 
-/* =========================================================
-   Simulator Event
-   ========================================================= */
-
 stemInput.addEventListener(
   "input",
   updateSim
 );
 
-
 ptInput.addEventListener(
   "input",
   updateSim
 );
-
 
 incInput.addEventListener(
   "input",
