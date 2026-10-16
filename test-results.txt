@@ -1,3 +1,4 @@
+PASS initial UI uses single measurement mode with hidden extra fields
 PASS source: all original script except tab router remains identical
 PASS 10 mm gives +6.2 degrees
 PASS 0 mm gives -1.2 degrees
@@ -42,5 +43,12 @@ PASS invalid visual estimate blocks saving
 PASS record roundtrip preserves raw decimal/negative/zero/missing and dates
 PASS CSV has units, formula, timestamps, missing blank and signed comparison
 PASS record import rejects wrong schema or malformed values
+PASS single mode only uses first measurement of each posture
+PASS mode switches restore retained measurements and require active inputs
+PASS records preserve mode, ID, counts, method and excluded raw values
+PASS partial records record actual counts and missing values
+PASS ID validation and text rendering preserve strings without markup interpretation
+PASS legacy v1.1 record imports explicitly as triple with blank ID
 PASS JSON/CSV download handlers and JSON import UI roundtrip (mock DOM/Blob)
-45 test groups passed; simulator 120 cases; photo 3 fixtures. Browser UI not covered by this DOM stub.
+PASS legacy JSON UI import and resave preserves three-measurement calculation
+53 test groups passed; simulator 120 cases; photo 3 fixtures. Browser UI not covered by this DOM stub.

@@ -6,7 +6,7 @@ function load(file){
  const context2d=new Proxy({}, {get:(target,key)=>target[key] || (()=>{}), set:(t,k,v)=>(t[k]=v,true)});
  for(const match of html.matchAll(/<[^>]+\bid="([^"]+)"[^>]*>/g)){
   const tag=match[0], classes=new Set((tag.match(/class="([^"]*)"/)?.[1]||'').split(/\s+/));
-  elements[match[1]]={value:tag.match(/value="([^"]*)"/)?.[1]||'',textContent:'',innerHTML:'',attrs:{},events:{},width:540,height:360,
+  elements[match[1]]={value:tag.match(/value="([^"]*)"/)?.[1]||(match[1]==='psti-mode'?'single':''),textContent:'',innerHTML:'',attrs:{},events:{},width:540,height:360,
    classList:{add:c=>classes.add(c),remove:c=>classes.delete(c),contains:c=>classes.has(c),toggle:(c,b)=>b?classes.add(c):classes.delete(c)},
    addEventListener(name,fn){(this.events[name] ||= []).push(fn)},dispatchEvent(event){this.events[event.type]?.forEach(fn=>fn(event))},setAttribute(k,v){this.attrs[k]=String(v)},getContext:()=>context2d,focus(){},
    getBoundingClientRect:()=>({left:0,top:0,width:540,height:360})};
@@ -18,6 +18,8 @@ function load(file){
  return {html,e:elements,sandbox,downloads,run:code=>vm.runInContext(code,sandbox),fire:(id,name)=>elements[id].events[name]?.map(fn=>fn({}))};
 }
 const before=load('baseline.html'), after=load('index.html');
+test('initial UI uses single measurement mode with hidden extra fields',()=>{assert.equal(after.e['psti-mode'].value,'single');assert.equal(after.e['psti-supine-2-group'].hidden,true);assert.equal(after.e['psti-standing-3'].disabled,true);assert.match(after.e['psti-mode-note'].textContent,/未検証/)});
+after.e['psti-mode'].value='triple';after.fire('psti-mode','change');
 const close=(actual,expected)=>assert.ok(Math.abs(actual-expected)<1e-10,`${actual} != ${expected}`);
 const calculate=values=>after.run(`calculatePsti(${JSON.stringify(values)})`);
 test('source: all original script except tab router remains identical',()=>{
@@ -73,8 +75,59 @@ test('CSV has units, formula, timestamps, missing blank and signed comparison',(
  const missing=after.run(`pstiCsv(createPstiRecord(['','','','','',''],'',null))`);assert.ok(missing.includes(',"","",""'));
 });
 test('record import rejects wrong schema or malformed values',()=>{for(const text of ['{}','null','{broken'])assert.throws(()=>after.run(`readPstiRecord(${JSON.stringify(text)})`))});
+test('single mode only uses first measurement of each posture',()=>{
+ const r=after.run("calculatePsti(['50','999','invalid','60','888',''],'single')");assert.equal(r.valid,true);close(r.supine,50);close(r.standing,60);close(r.estimate,6.2);
+ assert.equal(after.run("calculatePsti(['','50','50','60','60','60'],'single').valid"),false);
+ assert.equal(after.run("calculatePsti(['0','','','0','',''],'single').valid"),true);
+ assert.equal(after.run("calculatePsti(['50','','','60','',''],'triple').valid"),false);
+});
+test('mode switches restore retained measurements and require active inputs',()=>{
+ after.e['psti-mode'].value='single';after.fire('psti-mode','change');input([50,80,110,60,60,60]);assert.equal(after.e['psti-estimate'].textContent,'+6.20');
+ after.e['psti-mode'].value='triple';after.fire('psti-mode','change');assert.equal(after.e['psti-estimate'].textContent,'−16.00');assert.equal(after.e['psti-supine-2-group'].hidden,false);
+ input([50,'',110,60,60,60]);assert.equal(after.e['psti-estimate'].textContent,'—');
+ after.e['psti-mode'].value='single';after.fire('psti-mode','change');assert.equal(after.e['psti-estimate'].textContent,'+6.20');assert.equal(after.e['psti-supine-3'].value,'110');
+ input([50,'bad',110,60,60,60]);assert.equal(after.e['psti-estimate'].textContent,'+6.20');
+ after.e['psti-mode'].value='triple';after.fire('psti-mode','change');assert.equal(after.e['psti-estimate'].textContent,'—');assert.match(after.e['psti-status'].textContent,/入力エラー/);
+});
+function csvRows(text){
+ const rows=[];let row=[],cell='',quoted=false;
+ for(let i=0;i<text.length;i++){const c=text[i];if(i===0&&c==='\uFEFF')continue;
+  if(c==='"'){if(quoted&&text[i+1]==='"'){cell+='"';i++}else quoted=!quoted}
+  else if(c===','&&!quoted){row.push(cell);cell=''}
+  else if(c==='\r'&&!quoted&&text[i+1]==='\n'){row.push(cell);rows.push(row);row=[];cell='';i++}
+  else cell+=c;
+ }return rows;
+}
+test('records preserve mode, ID, counts, method and excluded raw values',()=>{
+ for(const mode of ['single','triple'])for(const id of ['', '00015', '研究A,"架空"', '=1+1', '-TEST', '+TEST', '@TEST']){
+  const r=after.run(`createPstiRecord(['50.0','80','110','60','60','60'],'-2.5','2026-10-16T10:20:00Z','2026-10-16T10:21:00Z',${JSON.stringify(mode)},${JSON.stringify(id)})`);
+  const loaded=after.run(`readPstiRecord(${JSON.stringify(JSON.stringify(r))})`);assert.equal(JSON.stringify(loaded),JSON.stringify(r));assert.equal(loaded.researchId,id);
+  assert.equal(loaded.measurementCounts.supine,mode==='single'?1:3);assert.equal(loaded.supineMeasurementsMm.length,mode==='single'?1:3);
+  assert.equal(loaded.calculationMethod,mode==='single'?'single_value_difference':'three_measurement_mean_difference');
+  assert.equal(loaded.raw.psti[1],'80');close(loaded.estimatedDeltaPtDeg,mode==='single'?6.2:-16);
+  const csv=after.run(`pstiCsv(${JSON.stringify(r)})`), rows=csvRows(csv), obj=Object.fromEntries(rows[0].map((key,i)=>[key,rows[1][i]]));
+  assert.equal(rows.length,2);assert.equal(rows[0].length,rows[1].length);
+  assert.equal(obj.research_id,/^[=+@-]/.test(id)?"'"+id:id);assert.equal(obj.measurement_mode,mode);
+  assert.equal(obj.supine_2_included,String(mode==='triple'));assert.equal(obj.supine_2_raw_input,'80');assert.equal(obj.supine_2_mm,mode==='single'?'':'80');
+ }
+});
+test('partial records record actual counts and missing values',()=>{
+ const r=after.run("createPstiRecord(['','','','60','',''],'',null,undefined,'single','')");
+ assert.equal(r.measurementCounts.supine,0);assert.equal(r.measurementCounts.standing,1);assert.equal(r.estimatedDeltaPtDeg,null);assert.equal(r.supineMeasurementsMm[0],null);
+});
+test('ID validation and text rendering preserve strings without markup interpretation',()=>{
+ assert.equal(after.run("validResearchId('架空001')"),true);assert.equal(after.run("validResearchId('x'.repeat(129))"),false);assert.equal(after.run("validResearchId('a\\nb')"),false);
+ assert.throws(()=>after.run("createPstiRecord(['50','','','60','',''],'',null,undefined,'single','a\\tb')"));
+ const r=after.run("createPstiRecord(['50','','','60','',''],'',null,undefined,'single','<test>')");assert.equal(r.researchId,'<test>');
+});
+const legacyRecord={schemaVersion:'psti-research-local-1.1.0',formula:'delta_PT_deg = 0.74 * (standing_mean_mm - supine_mean_mm) - 1.2',doi:'10.1302/2633-1462.710.BJO-2026-0113.R1',signConvention:'posterior_positive',postureTransition:'preoperative_supine_to_standing',units:{distance:'mm',angle:'degree'},inputAt:'2026-10-16T10:04:00.000Z',savedAt:'2026-10-16T10:05:00.000Z',raw:{psti:['50','80','110','60','60','60'],visual:'15'},supineMeasurementsMm:[50,80,110],standingMeasurementsMm:[60,60,60],supineMeanMm:80,standingMeanMm:60,deltaPstiMm:-20,estimatedDeltaPtDeg:-16,visualEstimateDeg:15,estimatedMinusVisualDeg:-31,extrapolated:true};
+test('legacy v1.1 record imports explicitly as triple with blank ID',()=>{
+ const r=after.run(`readPstiRecord(${JSON.stringify(JSON.stringify(legacyRecord))})`);assert.equal(r.measurementMode,'triple');assert.equal(r.researchId,'');assert.equal(r.estimatedDeltaPtDeg,-16);assert.equal(r.inputAt,legacyRecord.inputAt);
+});
 async function integration(){
+ after.e['psti-mode'].value='single';after.fire('psti-mode','change');
  input(['50.1','50.2','50.3','60.1','60.2','60.3']);after.e['psti-visual'].value='15';after.fire('psti-visual','input');
+ after.e['psti-research-id'].value='00015,"架空"';after.fire('psti-research-id','input');
  const timestamp=after.e['psti-input-time'].textContent;
  assert.equal(after.e['psti-comparison'].textContent,'−8.80');
  after.fire('psti-save-json','click');const saved=await after.sandbox.lastBlob.text();assert.equal(JSON.parse(saved).inputAt,timestamp);assert.match(after.downloads.at(-1),/\.json$/);
@@ -82,8 +135,13 @@ async function integration(){
  after.fire('psti-reset','click');after.e['psti-load-json'].files=[{size:saved.length,text:async()=>saved}];
  await Promise.all(after.fire('psti-load-json','change'));
  assert.equal(after.e['psti-visual'].value,'15');assert.equal(after.e[ids[0]].value,'50.1');assert.equal(after.e['psti-input-time'].textContent,timestamp);assert.equal(after.e['psti-comparison'].textContent,'−8.80');
+ assert.equal(after.e['psti-research-id'].value,'00015,"架空"');assert.equal(after.e['psti-mode'].value,'single');assert.equal(after.e['psti-supine-2'].value,'50.2');assert.equal(after.e['psti-supine-2-group'].hidden,true);
  assert.match(after.e['psti-save-status'].textContent,/再読込しました/);
  checks++;console.log('PASS JSON/CSV download handlers and JSON import UI roundtrip (mock DOM/Blob)');
+ after.e['psti-load-json'].files=[{size:1000,text:async()=>JSON.stringify(legacyRecord)}];await Promise.all(after.fire('psti-load-json','change'));
+ assert.equal(after.e['psti-mode'].value,'triple');assert.equal(after.e['psti-research-id'].value,'');assert.equal(after.e['psti-supine-2-group'].hidden,false);assert.equal(after.e['psti-estimate'].textContent,'−16.00');assert.equal(after.e['psti-input-time'].textContent,legacyRecord.inputAt);
+ after.fire('psti-save-json','click');const migrated=JSON.parse(await after.sandbox.lastBlob.text());assert.equal(migrated.measurementMode,'triple');assert.equal(migrated.requiredMeasurementsPerPosture,3);
+ checks++;console.log('PASS legacy JSON UI import and resave preserves three-measurement calculation');
  console.log(`${checks} test groups passed; simulator 120 cases; photo 3 fixtures. Browser UI not covered by this DOM stub.`);
 }
 integration().catch(error=>{console.error(error);process.exitCode=1});

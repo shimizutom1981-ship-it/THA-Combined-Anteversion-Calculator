@@ -398,11 +398,13 @@
     #tab-research h2 {font-size:1.1rem; color:var(--accent);}
     #tab-research fieldset {border:1px solid var(--border); border-radius:8px; margin:14px 0; min-width:0;}
     .psti-inputs {display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px;}
+    .psti-inputs:has(> [hidden]) {grid-template-columns:1fr;}
     .psti-notice {padding:10px; background:#17263b; border-left:3px solid #fbbf24;}
     #tab-research a {color:var(--accent); overflow-wrap:anywhere;}
     #tab-research input:focus {outline:2px solid var(--accent); border-radius:4px;}
     #tab-research input[aria-invalid="true"] {outline:2px solid #fb7185;}
     #tab-research small {font-size:.9rem;}
+    #tab-research select {display:block; width:100%; padding:10px; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:6px;}
     #tab-research details {margin-top:18px;}
     #tab-research summary {cursor:pointer; color:var(--accent);}
   </style>
@@ -808,18 +810,26 @@
   <section id="tab-research" class="tab-content" aria-labelledby="researchTabButton">
     <h2>PSTIによる骨盤後傾変化量の推定</h2>
     <p class="psti-notice"><strong>研究用・自施設未検証</strong><br>術前の仰臥位 → 立位における変化量を推定します。絶対的な骨盤傾斜角ではありません。</p>
-    <p id="psti-help">病院PACSビューワーで各姿勢3回測定した距離（mm）を入力してください。PSTIは、左右坐骨下部を結ぶ transischial line から恥骨結合上縁までの垂直距離です。半角の0以上の数値を入力してください（小数可）。空欄は0として扱いません。</p>
-    <fieldset><legend>仰臥位 PSTI（mm）</legend><div class="psti-inputs"><div><label for="psti-supine-1">1回目</label><div class="input-wrapper"><input id="psti-supine-1" type="text" inputmode="decimal" autocomplete="off" aria-describedby="psti-help psti-status"><span class="unit">mm</span></div></div><div><label for="psti-supine-2">2回目</label><div class="input-wrapper"><input id="psti-supine-2" type="text" inputmode="decimal" autocomplete="off" aria-describedby="psti-help psti-status"><span class="unit">mm</span></div></div><div><label for="psti-supine-3">3回目</label><div class="input-wrapper"><input id="psti-supine-3" type="text" inputmode="decimal" autocomplete="off" aria-describedby="psti-help psti-status"><span class="unit">mm</span></div></div></div><p>3回平均：<output id="psti-supine-mean">—</output> mm</p></fieldset><fieldset><legend>立位 PSTI（mm）</legend><div class="psti-inputs"><div><label for="psti-standing-1">1回目</label><div class="input-wrapper"><input id="psti-standing-1" type="text" inputmode="decimal" autocomplete="off" aria-describedby="psti-help psti-status"><span class="unit">mm</span></div></div><div><label for="psti-standing-2">2回目</label><div class="input-wrapper"><input id="psti-standing-2" type="text" inputmode="decimal" autocomplete="off" aria-describedby="psti-help psti-status"><span class="unit">mm</span></div></div><div><label for="psti-standing-3">3回目</label><div class="input-wrapper"><input id="psti-standing-3" type="text" inputmode="decimal" autocomplete="off" aria-describedby="psti-help psti-status"><span class="unit">mm</span></div></div></div><p>3回平均：<output id="psti-standing-mean">—</output> mm</p></fieldset>
+    <fieldset><legend>研究記録</legend>
+      <label for="psti-research-id">研究ID（任意・患者氏名は入力しない）</label>
+      <div class="input-wrapper"><input id="psti-research-id" type="text" maxlength="128" autocomplete="off" placeholder="例：TEST-001"></div>
+      <p>空欄でも使用できます。試すときは架空のIDを使用してください。</p>
+      <label for="psti-mode">測定回数</label>
+      <select id="psti-mode"><option value="single" selected>各姿勢1回（簡易入力）</option><option value="triple">各姿勢3回の平均（原著の方法）</option></select>
+      <p id="psti-mode-note" class="psti-notice"></p>
+    </fieldset>
+    <p id="psti-help">病院PACSビューワーで測定した距離（mm）を入力してください。PSTIは、左右坐骨下部を結ぶ transischial line から恥骨結合上縁までの垂直距離です。半角の0以上の数値を入力してください（小数可）。空欄は0として扱いません。</p>
+    <fieldset><legend>仰臥位 PSTI（mm）</legend><div class="psti-inputs"><div id="psti-supine-1-group"><label for="psti-supine-1">1回目</label><div class="input-wrapper"><input id="psti-supine-1" type="text" inputmode="decimal" autocomplete="off" aria-describedby="psti-help psti-status"><span class="unit">mm</span></div></div><div id="psti-supine-2-group" hidden><label for="psti-supine-2">2回目</label><div class="input-wrapper"><input id="psti-supine-2" type="text" inputmode="decimal" autocomplete="off" aria-describedby="psti-help psti-status"><span class="unit">mm</span></div></div><div id="psti-supine-3-group" hidden><label for="psti-supine-3">3回目</label><div class="input-wrapper"><input id="psti-supine-3" type="text" inputmode="decimal" autocomplete="off" aria-describedby="psti-help psti-status"><span class="unit">mm</span></div></div></div><p><span id="psti-supine-summary-label">使用値（1回）</span>：<output id="psti-supine-mean">—</output> mm</p></fieldset><fieldset><legend>立位 PSTI（mm）</legend><div class="psti-inputs"><div id="psti-standing-1-group"><label for="psti-standing-1">1回目</label><div class="input-wrapper"><input id="psti-standing-1" type="text" inputmode="decimal" autocomplete="off" aria-describedby="psti-help psti-status"><span class="unit">mm</span></div></div><div id="psti-standing-2-group" hidden><label for="psti-standing-2">2回目</label><div class="input-wrapper"><input id="psti-standing-2" type="text" inputmode="decimal" autocomplete="off" aria-describedby="psti-help psti-status"><span class="unit">mm</span></div></div><div id="psti-standing-3-group" hidden><label for="psti-standing-3">3回目</label><div class="input-wrapper"><input id="psti-standing-3" type="text" inputmode="decimal" autocomplete="off" aria-describedby="psti-help psti-status"><span class="unit">mm</span></div></div></div><p><span id="psti-standing-summary-label">使用値（1回）</span>：<output id="psti-standing-mean">—</output> mm</p></fieldset>
     <div aria-live="polite" aria-atomic="true">
-      <p id="psti-status">各姿勢3回、計6個の測定値を入力してください。</p>
+      <p id="psti-status">各姿勢1回、計2個の測定値を入力してください。</p>
       <div class="results-row">
-        <div class="res-box"><div class="res-title">ΔPSTI＝立位平均 − 仰臥位平均</div><div class="res-val"><output id="psti-difference">—</output> <small>mm</small></div></div>
+        <div class="res-box"><div class="res-title">ΔPSTI＝立位使用値 − 仰臥位使用値</div><div class="res-val"><output id="psti-difference">—</output> <small>mm</small></div></div>
         <div class="res-box"><div class="res-title">推定後傾変化量 ΔPT</div><div class="res-val"><output id="psti-estimate">—</output> <small>°</small></div></div>
       </div>
       <p id="psti-direction">正値＝後傾方向、負値＝前傾方向</p>
       <p id="psti-warning" class="psti-notice" hidden></p>
     </div>
-    <p>推定式（後傾正）：<strong>ΔPT＝0.74 × ΔPSTI − 1.2°</strong><br>平均値を丸めずに計算します。表示は小数第2位まで（微小な非ゼロ値は指数表記）。</p>
+    <p>推定式（後傾正）：<strong>ΔPT＝0.74 × ΔPSTI − 1.2°</strong><br>1回モードは1回目の値、3回モードは3回平均を使用し、途中で丸めずに計算します。表示は小数第2位まで（微小な非ゼロ値は指数表記）。</p>
     <p class="psti-notice">既存のΔPT入力欄・目標AVへ自動転記しません。この研究用推定値のみで設置目標を決定しないでください。</p>
     <fieldset><legend>比較用の目視概算（任意）</legend>
       <label for="psti-visual">CTの3D像との目視比較による概算後傾変化量（°）</label>
@@ -828,7 +838,8 @@
       <p>推定値 − 概算値：<output id="psti-comparison">—</output> °</p>
     </fieldset>
     <p>入力日時（最終編集）：<output id="psti-input-time">未入力</output></p>
-    <p>患者氏名などの識別情報は入力しないでください。保存ファイルは端末内にダウンロードします。欠測はJSONではnull、CSVでは空欄として保存します。未保存の入力はページを閉じると失われます。</p>
+    <p>患者氏名などの識別情報は入力しないでください。保存ファイルは端末内にダウンロードします。欠測はJSONではnull、CSVでは空欄として保存します。研究ID・測定モード・回数・計算方法も保存します。未保存の入力はページを閉じると失われます。</p>
+    <p>JSONはID・入力をそのまま保持します。CSVは引用符・カンマをエスケープし、式として解釈され得る文字列の先頭にアポストロフィを付けます。非使用の2・3回目もraw_input列に保存し、included列で計算対象を区別します。</p>
     <div class="file-input-wrapper">
       <button id="psti-save-json" type="button" class="btn-action">JSON保存</button>
       <button id="psti-save-csv" type="button" class="btn-action">CSV保存</button>
@@ -3374,10 +3385,10 @@ function parsePsti(raw) {
   if (!Number.isFinite(number) || number > Number.MAX_SAFE_INTEGER || (number === 0 && /[1-9]/.test(value))) return {error:'invalid'};
   return {value:number};
 }
-function calculatePsti(raw) {
-  if (!Array.isArray(raw) || raw.length !== 6) return {valid:false};
-  const parsed = raw.map(parsePsti);
-  const mean = values => values.every(v => !v.error) ? values.reduce((sum,v) => sum+v.value/3,0) : null;
+function calculatePsti(raw, mode='triple') {
+  if (!Array.isArray(raw) || raw.length !== 6 || !['single','triple'].includes(mode)) return {valid:false};
+  const parsed = raw.map((v,i) => mode==='single' && i%3!==0 ? {inactive:true} : parsePsti(v));
+  const mean = values => { const active=values.filter(v=>!v.inactive); return active.every(v => !v.error) ? active.reduce((sum,v) => sum+v.value/active.length,0) : null; };
   const supine = mean(parsed.slice(0,3)), standing = mean(parsed.slice(3));
   if (supine === null || standing === null) return {valid:false, parsed, supine, standing};
   const difference = standing-supine;
@@ -3395,24 +3406,32 @@ function formatPsti(value, signed=false) {
   const fields = ids.map(id => document.getElementById(id));
   const el = id => document.getElementById('psti-'+id);
   function render() {
-    const result = calculatePsti(fields.map(field => field.value));
+    const mode=el('mode').value;
+    const result = calculatePsti(fields.map(field => field.value),mode);
+    ['supine','standing'].forEach(posture=>{
+      el(posture+'-summary-label').textContent=mode==='single'?'使用値（1回）':'使用値（3回平均）';
+      [2,3].forEach(i=>{el(`${posture}-${i}-group`).hidden=mode==='single';el(`${posture}-${i}`).disabled=mode==='single';});
+    });
+    el('mode-note').textContent=mode==='single'?'1回入力は原著の3回平均と異なり、原著MAE 0.9°と同等の精度は未検証です。2・3回目の値は計算に使いません（切替前の入力は保持）。':'各姿勢3回すべての入力が必要です。原著と同じ3回平均ですが、自施設での精度は未検証です。';
     fields.forEach((field,i) => field.setAttribute('aria-invalid', result.parsed[i].error === 'invalid' ? 'true' : 'false'));
     el('supine-mean').textContent = formatPsti(result.supine);
     el('standing-mean').textContent = formatPsti(result.standing);
     el('difference').textContent = result.valid ? formatPsti(result.difference,true) : '—';
     el('estimate').textContent = result.valid ? formatPsti(result.estimate,true) : '—';
-    el('status').textContent = result.valid ? '6個の測定値から算出しました。' : result.parsed.some(v=>v.error === 'invalid') ? '入力エラー：半角の0以上の有限な数値を入力してください。単位・指数表記・カンマ・負値は入力できません。' : '各姿勢3回、計6個の測定値を入力してください（欠測のため推定未算出）。';
+    const count=mode==='single'?1:3;
+    el('status').textContent = result.valid ? `${count*2}個の測定値から算出しました。` : result.parsed.some(v=>v.error === 'invalid') ? '入力エラー：半角の0以上の有限な数値を入力してください。単位・指数表記・カンマ・負値は入力できません。' : `各姿勢${count}回、計${count*2}個の測定値を入力してください（欠測のため推定未算出）。`;
     el('direction').textContent = result.valid ? (result.estimate > 0 ? '正値：後傾方向への変化' : result.estimate < 0 ? '負値：前傾方向への変化' : '推定変化量 0°')+'（仰臥位 → 立位）。絶対角ではありません。' : '正値＝後傾方向、負値＝前傾方向';
     el('warning').hidden = !result.valid || !result.extrapolated;
     el('warning').textContent = result.valid && result.extrapolated ? '外挿：ΔPSTIが原著の観測範囲（−8.5〜27.9 mm）外です。この条件での推定精度は確認されていません。' : '';
   }
   fields.forEach(field => field.addEventListener('input',render));
+  el('mode').addEventListener('change',render);
   document.getElementById('researchTabButton').addEventListener('click',()=>switchTab('research'));
-  el('reset').addEventListener('click',()=>{fields.forEach(field=>field.value=''); render(); fields[0].focus();});
+  el('reset').addEventListener('click',()=>{fields.forEach(field=>field.value=''); el('mode').value='single'; render(); fields[0].focus();});
   render();
 })();
 
-const PSTI_VERSION = 'psti-research-local-1.1.0';
+const PSTI_VERSION = 'psti-research-local-1.2.0';
 const PSTI_FORMULA = 'delta_PT_deg = 0.74 * (standing_mean_mm - supine_mean_mm) - 1.2';
 function parseVisual(raw) {
   const value=String(raw).trim();
@@ -3422,26 +3441,43 @@ function parseVisual(raw) {
   if (!Number.isFinite(number) || Math.abs(number)>Number.MAX_SAFE_INTEGER || (number===0 && /[1-9]/.test(value))) return {error:'invalid'};
   return {value:number};
 }
-function createPstiRecord(raw, visualRaw, inputAt, savedAt=new Date().toISOString()) {
-  const r=calculatePsti(raw), visual=parseVisual(visualRaw);
-  if (!r.parsed || r.parsed.some(v=>v.error==='invalid') || visual.error) throw new Error('不正な入力を修正してから保存してください。');
+function validResearchId(value) { return typeof value==='string' && value.length<=128 && !/[\u0000-\u001f\u007f]/.test(value); }
+function createPstiRecord(raw, visualRaw, inputAt, savedAt=new Date().toISOString(), mode='triple', researchId='') {
+  const r=calculatePsti(raw,mode), visual=parseVisual(visualRaw);
+  if (!r.parsed || r.parsed.some(v=>v.error==='invalid') || visual.error || raw.some(v=>typeof v!=='string') || typeof visualRaw!=='string') throw new Error('不正な入力を修正してから保存してください。');
+  if (!validResearchId(researchId)) throw new Error('研究IDは128文字以内で、改行・制御文字を含めずに入力してください。');
+  const active=values=>values.filter(v=>!v.inactive);
+  const supine=active(r.parsed.slice(0,3)), standing=active(r.parsed.slice(3));
   return {schemaVersion:PSTI_VERSION,formula:PSTI_FORMULA,doi:'10.1302/2633-1462.710.BJO-2026-0113.R1',
     signConvention:'posterior_positive',postureTransition:'preoperative_supine_to_standing',units:{distance:'mm',angle:'degree'},
+    researchId,measurementMode:mode,requiredMeasurementsPerPosture:mode==='single'?1:3,
+    measurementCounts:{supine:supine.filter(v=>!v.error).length,standing:standing.filter(v=>!v.error).length},
+    calculationMethod:mode==='single'?'single_value_difference':'three_measurement_mean_difference',
+    rawLayout:'supine_1_2_3_then_standing_1_2_3; single uses only indices 0 and 3; other raw inputs retained but excluded',
     inputAt,savedAt,raw:{psti:raw.slice(),visual:visualRaw},
-    supineMeasurementsMm:r.parsed.slice(0,3).map(v=>v.error?null:v.value),standingMeasurementsMm:r.parsed.slice(3).map(v=>v.error?null:v.value),
+    supineMeasurementsMm:supine.map(v=>v.error?null:v.value),standingMeasurementsMm:standing.map(v=>v.error?null:v.value),
     supineMeanMm:r.supine,standingMeanMm:r.standing,deltaPstiMm:r.valid?r.difference:null,estimatedDeltaPtDeg:r.valid?r.estimate:null,
     visualEstimateDeg:visual.value,estimatedMinusVisualDeg:r.valid&&visual.value!==null?r.estimate-visual.value:null,
     extrapolated:r.valid?r.extrapolated:null};
 }
 function readPstiRecord(text) {
   const r=JSON.parse(text);
-  if (!r || r.schemaVersion!==PSTI_VERSION || r.formula!==PSTI_FORMULA || r.signConvention!=='posterior_positive' || r.postureTransition!=='preoperative_supine_to_standing' || r.units?.distance!=='mm' || r.units?.angle!=='degree' || !Array.isArray(r.raw?.psti) || r.raw.psti.length!==6 || r.raw.psti.some(v=>typeof v!=='string') || typeof r.raw.visual!=='string' || !(r.inputAt===null || (typeof r.inputAt==='string' && Number.isFinite(Date.parse(r.inputAt))))) throw new Error('対応する研究用JSON形式ではありません。');
+  if (!r || ![PSTI_VERSION,'psti-research-local-1.1.0'].includes(r.schemaVersion) || r.formula!==PSTI_FORMULA || r.signConvention!=='posterior_positive' || r.postureTransition!=='preoperative_supine_to_standing' || r.units?.distance!=='mm' || r.units?.angle!=='degree' || !Array.isArray(r.raw?.psti) || r.raw.psti.length!==6 || r.raw.psti.some(v=>typeof v!=='string') || typeof r.raw.visual!=='string' || !(r.inputAt===null || (typeof r.inputAt==='string' && Number.isFinite(Date.parse(r.inputAt)))) || typeof r.savedAt!=='string' || !Number.isFinite(Date.parse(r.savedAt))) throw new Error('対応する研究用JSON形式ではありません。');
+  const legacy=r.schemaVersion==='psti-research-local-1.1.0';
+  const mode=legacy?'triple':r.measurementMode, researchId=legacy?'':r.researchId;
+  if (!['single','triple'].includes(mode) || !validResearchId(researchId)) throw new Error('測定モードまたは研究IDが不正です。');
   // Recompute all derived results from raw measurements, never trust imported estimates.
-  return createPstiRecord(r.raw.psti,r.raw.visual,r.inputAt,r.savedAt);
+  return createPstiRecord(r.raw.psti,r.raw.visual,r.inputAt,r.savedAt,mode,researchId);
 }
 function pstiCsv(record) {
-  const flat={schema_version:record.schemaVersion,formula:record.formula,doi:record.doi,sign_convention:record.signConvention,posture_transition:record.postureTransition,distance_unit:'mm',angle_unit:'degree',input_at:record.inputAt,saved_at:record.savedAt};
-  ['supine','standing'].forEach((p,j)=>[0,1,2].forEach(i=>flat[`${p}_${i+1}_mm`]=record[j?'standingMeasurementsMm':'supineMeasurementsMm'][i]));
+  // Formula-looking text is prefixed for spreadsheet safety; JSON preserves exact strings.
+  const safeText=value=>/^\s*[=+@-]/.test(value)?"'"+value:value;
+  const flat={schema_version:record.schemaVersion,research_id:safeText(record.researchId),measurement_mode:record.measurementMode,required_measurements_per_posture:record.requiredMeasurementsPerPosture,supine_measurement_count:record.measurementCounts.supine,standing_measurement_count:record.measurementCounts.standing,calculation_method:record.calculationMethod,formula:record.formula,doi:record.doi,sign_convention:record.signConvention,posture_transition:record.postureTransition,distance_unit:'mm',angle_unit:'degree',input_at:record.inputAt,saved_at:record.savedAt};
+  ['supine','standing'].forEach((p,j)=>[0,1,2].forEach(i=>{
+    flat[`${p}_${i+1}_mm`]=record[j?'standingMeasurementsMm':'supineMeasurementsMm'][i]??null;
+    flat[`${p}_${i+1}_raw_input`]=safeText(record.raw.psti[j*3+i]);
+    flat[`${p}_${i+1}_included`]=record.measurementMode==='triple'||i===0;
+  }));
   Object.assign(flat,{supine_mean_mm:record.supineMeanMm,standing_mean_mm:record.standingMeanMm,delta_psti_mm:record.deltaPstiMm,estimated_delta_pt_deg:record.estimatedDeltaPtDeg,visual_estimate_deg:record.visualEstimateDeg,estimated_minus_visual_deg:record.estimatedMinusVisualDeg,extrapolated:record.extrapolated});
   const quote=v=>'"'+(v===null?'':String(v)).replace(/"/g,'""')+'"';
   return '\uFEFF'+Object.keys(flat).map(quote).join(',')+'\r\n'+Object.values(flat).map(quote).join(',')+'\r\n';
@@ -3451,17 +3487,19 @@ function pstiCsv(record) {
   const fields=['supine','standing'].flatMap(p=>[1,2,3].map(i=>el(`${p}-${i}`)));
   let inputAt=null;
   function renderComparison(){
-    const r=calculatePsti(fields.map(f=>f.value)), visual=parseVisual(el('visual').value);
+    const r=calculatePsti(fields.map(f=>f.value),el('mode').value), visual=parseVisual(el('visual').value);
     el('visual').setAttribute('aria-invalid',visual.error?'true':'false');
     el('comparison').textContent=visual.error?'入力エラー':r.valid&&visual.value!==null?formatPsti(r.estimate-visual.value,true):'—';
     el('input-time').textContent=inputAt||'未入力';
+    el('research-id').setAttribute('aria-invalid',validResearchId(el('research-id').value)?'false':'true');
   }
   function edited(){inputAt=new Date().toISOString();el('save-status').textContent='未保存の変更があります。';renderComparison()}
-  [...fields,el('visual')].forEach(f=>f.addEventListener('input',edited));
-  el('reset').addEventListener('click',()=>{el('visual').value='';inputAt=null;el('save-status').textContent='研究用入力をクリアしました。';renderComparison()});
+  [...fields,el('visual'),el('research-id')].forEach(f=>f.addEventListener('input',edited));
+  el('mode').addEventListener('change',edited);
+  el('reset').addEventListener('click',()=>{el('visual').value='';el('research-id').value='';inputAt=null;el('save-status').textContent='研究用入力をクリアしました。';renderComparison()});
   function save(format){
     try {
-      const record=createPstiRecord(fields.map(f=>f.value),el('visual').value,inputAt);
+      const record=createPstiRecord(fields.map(f=>f.value),el('visual').value,inputAt,undefined,el('mode').value,el('research-id').value);
       const text=format==='json'?JSON.stringify(record,null,2):pstiCsv(record);
       const url=URL.createObjectURL(new Blob([text],{type:format==='json'?'application/json':'text/csv;charset=utf-8'}));
       const anchor=document.createElement('a');anchor.href=url;anchor.download='psti-research-'+record.savedAt.replace(/[:.]/g,'-')+'.'+format;
@@ -3477,6 +3515,7 @@ function pstiCsv(record) {
       if(file.size>100000)throw new Error('JSONファイルが大きすぎます。');
       const record=readPstiRecord(await file.text());
       fields.forEach((f,i)=>f.value=record.raw.psti[i]);el('visual').value=record.raw.visual;
+      el('mode').value=record.measurementMode;el('research-id').value=record.researchId;
       fields[0].dispatchEvent(new Event('input'));inputAt=record.inputAt;renderComparison();
       el('save-status').textContent='JSONを再読込しました。入力日時を保持し、生値から再計算しました。';
     }catch(error){el('save-status').textContent='読込失敗：'+error.message}
