@@ -1,0 +1,46 @@
+PASS source: all original script except tab router remains identical
+PASS 10 mm gives +6.2 degrees
+PASS 0 mm gives -1.2 degrees
+PASS negative difference preserved
+PASS decimal means, no intermediate rounding
+PASS reject ""
+PASS reject " "
+PASS reject "abc"
+PASS reject "12mm"
+PASS reject "1,2"
+PASS reject "NaN"
+PASS reject "Infinity"
+PASS reject "-1"
+PASS reject "-0"
+PASS reject "1e2"
+PASS reject "0x10"
+PASS reject "・托ｼ・
+PASS reject "99999999999999999999999999999999999999999999
+PASS reject "0.000000000000000000000000000000000000000000
+PASS explicit zero accepted
+PASS leading/trailing whitespace and decimal formats
+PASS extrapolation boundary -8.5
+PASS extrapolation boundary 27.9
+PASS extrapolation boundary -8.50001
+PASS extrapolation boundary 27.90001
+PASS tiny negative values never displayed as zero
+PASS initial incomplete input has no estimate
+PASS research input updates outputs and direction
+PASS clearing one value removes stale estimate and warning
+PASS invalid field identified
+PASS research has no transfer to simulator
+PASS three tabs mutually exclusive through click handlers
+PASS simulator baseline regression: 120 combinations including negative, zero, invalid, both sides
+PASS photo geometry baseline regression: five-point cases, reset, zoom
+PASS visual estimate "15"
+PASS visual estimate "15.25"
+PASS visual estimate "-2.5"
+PASS visual estimate "0"
+PASS visual estimate ""
+PASS visual estimate "+5"
+PASS invalid visual estimate blocks saving
+PASS record roundtrip preserves raw decimal/negative/zero/missing and dates
+PASS CSV has units, formula, timestamps, missing blank and signed comparison
+PASS record import rejects wrong schema or malformed values
+PASS JSON/CSV download handlers and JSON import UI roundtrip (mock DOM/Blob)
+45 test groups passed; simulator 120 cases; photo 3 fixtures. Browser UI not covered by this DOM stub.
