@@ -3,7 +3,7 @@ THA Combined Anteversion Calculator — local research prototype 1.2.0
 
 開く対象は index.html の1つだけです。
 Windowsのエクスプローラーで index.html をダブルクリックし、右端の「研究用 PSTI → ΔPT」を選択してください。
-依存ライブラリ、サーバー、インターネット接続は不要です（出典リンクを開く場合のみ通信）。
+同梱のassetsフォルダーをindex.htmlと同じ階層に保持してください。依存ライブラリ、サーバー、インターネット接続は不要です（出典リンクを開く場合のみ通信）。
 既存の初期表示はシミュレーターのまま維持しています。
 
 実装
@@ -31,7 +31,9 @@ Windowsのエクスプローラーで index.html をダブルクリックし、�
 - 旧v1.1.0 JSONは3回平均モード、研究ID空欄として読込。日時・生値・概算値を保持し、v1.2.0で再保存。
 
 ファイル
-index.html        完成した単独動作の試作（ユーザーが開く対象）
+index.html        完成した試作（ユーザーが開く対象）
+assets/PSTI_measurement_original.png  原著Fig.1右下のPSTI測定パネル切り出し
+PSTI-GUIDE-FRAGMENT.html  第3タブの折りたたみ式測定ガイド（build.cjsが取り込む）
 baseline.html     main/index.html の取得時原本（比較用。開く必要なし）
 research.js       PSTI入力検証、計算、表示
 records.js        概算、JSON/CSV保存、JSON再読込
@@ -50,7 +52,14 @@ FMAおよびTHA-Cup-App-Research-v1.0にはアクセス・変更していない�
 node build.cjs
 node test.cjs
 
-実施済み: 53テスト群成功
+画像ガイド
+- 原著Fig.1右下パネルの切り出しを、第3タブの「測り方を見る」detailsで表示。
+- 画像は幅100%、高さ自動、alt付き。相対URL assets/PSTI_measurement_original.png を使用。
+- 左右坐骨下部を結ぶ白い点線から恥骨結合上縁までの白い縦線を、PACSでmm測定する説明。
+- 出典: Kobayashi et al., Bone Jt Open 2026;7:1280–1287, Fig.1, DOI 10.1302/2633-1462.710.BJO-2026-0113.R1、CC BY 4.0。
+- 元PDF全文は含めない。画像追加による計算変更はない。
+
+実施済み: 54テスト群成功
 - 数式、符号、欠測、0、小数、非数値、距離負値、不正値、微小負値の表示。
 - 観測範囲の両端と直外の外挿判定。
 - 入力変更時の旧結果消去、タブ切替、既存入力への非転記。
@@ -62,6 +71,7 @@ node test.cjs
 - 保存ボタンと読込イベントの統合テスト（DOMとダウンロードを模擬、実Blobを使用）。
 - 1回初期UI、モード切替、隠し値除外・復元、必要入力の欠測、研究IDの先頭0・日本語・引用符・カンマ。
 - 各モード保存読込、回数・計算方法、旧v1.1 JSONの3回平均読込と再保存、CSVの解析と文字列保護。
+- 図のGit blob SHA一致、PNG形式、相対リンク、details/summary、幅100%、alt、出典・ライセンス・切り出し表記。
 
 未実施・制限
 - 実ブラウザーの画面、タッチ操作、ファイル選択・ダウンロードの実機確認。

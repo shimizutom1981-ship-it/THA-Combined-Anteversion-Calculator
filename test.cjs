@@ -26,6 +26,14 @@ test('source: all original script except tab router remains identical',()=>{
  const strip=s=>s.match(/<script>([\s\S]*?)<\/script>/)[1].replace(/function switchTab\(tabName\) \{[\s\S]*?\nmeasureTabButton.addEventListener/,'TAB_ROUTER');
  assert.equal(strip(before.html),strip(after.html));
 });
+test('measurement guide uses supplied image, responsive details, alt and attribution',()=>{
+ const guide=after.html.match(/<details class="psti-measurement-guide">[\s\S]*?<\/details>/)?.[0];assert.ok(guide);
+ assert.match(guide,/<summary>測り方を見る/);assert.match(guide,/width:100%;height:auto/);assert.match(guide,/alt="[^"]*左右坐骨下部[^"]*恥骨結合上縁/);
+ assert.match(guide,/Fig\.1の右下パネルを切り出し/);assert.match(guide,/CC BY 4\.0/);assert.match(guide,/10\.1302\/2633-1462\.710\.BJO-2026-0113\.R1/);
+ const src=guide.match(/src="([^"]+)"/)[1];assert.equal(src,'assets/PSTI_measurement_original.png');
+ const bytes=fs.readFileSync(src);assert.equal(bytes.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
+ const hash=require('node:crypto').createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');assert.equal(hash,'9000139a8e3af5f7cdd92877a1671bd9c84cd876');
+});
 test('10 mm gives +6.2 degrees',()=>close(calculate([50,50,50,60,60,60]).estimate,6.2));
 test('0 mm gives -1.2 degrees',()=>close(calculate([50,50,50,50,50,50]).estimate,-1.2));
 test('negative difference preserved',()=>close(calculate([60,60,60,50,50,50]).estimate,-8.6));

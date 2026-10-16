@@ -1,5 +1,6 @@
 PASS initial UI uses single measurement mode with hidden extra fields
 PASS source: all original script except tab router remains identical
+PASS measurement guide uses supplied image, responsive details, alt and attribution
 PASS 10 mm gives +6.2 degrees
 PASS 0 mm gives -1.2 degrees
 PASS negative difference preserved
@@ -51,4 +52,4 @@ PASS ID validation and text rendering preserve strings without markup interpreta
 PASS legacy v1.1 record imports explicitly as triple with blank ID
 PASS JSON/CSV download handlers and JSON import UI roundtrip (mock DOM/Blob)
 PASS legacy JSON UI import and resave preserves three-measurement calculation
-53 test groups passed; simulator 120 cases; photo 3 fixtures. Browser UI not covered by this DOM stub.
+54 test groups passed; simulator 120 cases; photo 3 fixtures. Browser UI not covered by this DOM stub.

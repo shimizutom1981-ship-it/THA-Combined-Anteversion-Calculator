@@ -1,5 +1,6 @@
 const fs = require('node:fs');
 let html = fs.readFileSync('baseline.html', 'utf8');
+const measurementGuide = fs.readFileSync('PSTI-GUIDE-FRAGMENT.html','utf8');
 const fields = (posture, name) => `<fieldset><legend>${name} PSTI（mm）</legend><div class="psti-inputs">${[1,2,3].map(i => `<div id="psti-${posture}-${i}-group"${i>1?' hidden':''}><label for="psti-${posture}-${i}">${i}回目</label><div class="input-wrapper"><input id="psti-${posture}-${i}" type="text" inputmode="decimal" autocomplete="off" aria-describedby="psti-help psti-status"><span class="unit">mm</span></div></div>`).join('')}</div><p><span id="psti-${posture}-summary-label">使用値（1回）</span>：<output id="psti-${posture}-mean">—</output> mm</p></fieldset>`;
 const panel = `
   <section id="tab-research" class="tab-content" aria-labelledby="researchTabButton">
@@ -14,6 +15,7 @@ const panel = `
       <p id="psti-mode-note" class="psti-notice"></p>
     </fieldset>
     <p id="psti-help">病院PACSビューワーで測定した距離（mm）を入力してください。PSTIは、左右坐骨下部を結ぶ transischial line から恥骨結合上縁までの垂直距離です。半角の0以上の数値を入力してください（小数可）。空欄は0として扱いません。</p>
+    ${measurementGuide}
     ${fields('supine','仰臥位')}${fields('standing','立位')}
     <div aria-live="polite" aria-atomic="true">
       <p id="psti-status">各姿勢1回、計2個の測定値を入力してください。</p>
