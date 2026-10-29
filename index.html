@@ -646,7 +646,7 @@
       <div class="input-group">
 
         <label for="cupInc">
-          目標外方傾斜角 (Inclination)
+          中間位の目標外方傾斜角 (RI)
         </label>
 
         <div class="input-wrapper">
@@ -673,7 +673,7 @@
 
           <input
             type="text"
-            value="Widmer - ΔPT/2"
+            value="Widmer ＋ 中間位の3D換算"
             disabled
             style="
               color:#94a3b8;
@@ -692,7 +692,7 @@
       <div class="res-box">
 
         <div class="res-title">
-          目標カップ前捻角 (V_cup)
+          臥位の設置目標 RA
         </div>
 
         <div class="res-val">
@@ -705,7 +705,7 @@
       <div class="res-box">
 
         <div class="res-title">
-          透視見かけ傾斜角 (Apparent Inc)
+          臥位の設置目標 RI
         </div>
 
         <div class="res-val">
@@ -717,12 +717,22 @@
 
     </div>
 
+    <p id="geometry-status" role="status" style="line-height:1.7;color:#cbd5e1"></p>
+    <details style="margin:12px 0;line-height:1.7;color:#cbd5e1">
+      <summary>中間位の計算と旧方式との差</summary>
+      <p>ΔPT＝立位PT−臥位PT（後傾正）。中間位は臥位からΔPT/2回転した骨盤姿勢です。入力RIとWidmer式のRAを中間位の目標とし、カップ軸を逆回転して臥位RA・RIを同時に求めます。</p>
+      <p id="geometry-comparison"></p>
+      <p id="geometry-roundtrip"></p>
+      <p>角度はradiographic定義。図は臥位での中心投影による概念図です。前後傾のみの剛体回転を計算し、骨盤の回旋・側方傾斜、大腿骨姿勢の変化、骨性衝突は含みません。中間位の幾何学的再現を保証する計算であり、可動域最大化や脱臼低減の臨床的保証ではありません。</p>
+      <p>計算更新 2026-10-29　midpoint-geometry 2.0</p>
+    </details>
+
     <div class="viewer-panel">
 
       <div class="viewer-header">
 
         <span id="viewSideLabel">
-          イメージ正面像: 右股関節
+          臥位の正面投影: 右股関節
         </span>
 
         <span>
@@ -3154,7 +3164,7 @@ function setSide(side) {
     );
 
   viewSideLabel.textContent =
-    "イメージ正面像: " +
+    "臥位の正面投影: " +
     (
       side === "right"
         ? "右股関節"
@@ -3180,105 +3190,67 @@ document
   );
 
 
+// Radiographic angles: x=lateral (ipsilateral), y=anterior, z=superior.
+// Positive posterior pelvic rotation: y'=y cos(t)+z sin(t), z'=z cos(t)-y sin(t).
+function cupAxisFromRadiographic(ra, ri) {
+  const a = ra * Math.PI / 180, i = ri * Math.PI / 180;
+  return [Math.cos(a)*Math.sin(i), Math.sin(a), Math.cos(a)*Math.cos(i)];
+}
+function rotateCupAxisPosterior(axis, degrees) {
+  const t = degrees * Math.PI / 180, [x,y,z] = axis;
+  return [x, y*Math.cos(t)+z*Math.sin(t), z*Math.cos(t)-y*Math.sin(t)];
+}
+function cupRadiographicFromAxis([x,y,z]) {
+  return {ra: Math.atan2(y, Math.hypot(x,z))*180/Math.PI,
+          ri: Math.atan2(x,z)*180/Math.PI};
+}
+function calculateMidpointCup(stem, deltaPT, midpointRI) {
+  if (![stem,deltaPT,midpointRI].every(Number.isFinite)) throw new Error('すべての角度を入力してください。');
+  const midpointRA = 37.3 - 0.7*stem;
+  if (Math.abs(midpointRA) >= 90 || midpointRI <= 0 || midpointRI >= 90 || Math.abs(deltaPT) >= 180)
+    throw new Error('計算範囲外です。中間位RAは−90°超〜90°未満、RIは0°超〜90°未満、ΔPTは−180°超〜180°未満にしてください。');
+  const midpointAxis = cupAxisFromRadiographic(midpointRA, midpointRI);
+  const supineAxis = rotateCupAxisPosterior(midpointAxis, -deltaPT/2);
+  const supine = cupRadiographicFromAxis(supineAxis);
+  if (supine.ri <= 0 || supine.ri >= 90)
+    throw new Error('換算後RIが0°超〜90°未満の表示範囲を外れます。入力と角度定義を確認してください。');
+  return {midpointRA, midpointRI, supine, supineAxis,
+    midpointCheck: cupRadiographicFromAxis(rotateCupAxisPosterior(supineAxis, deltaPT/2)),
+    standing: cupRadiographicFromAxis(rotateCupAxisPosterior(supineAxis, deltaPT)),
+    legacyRA: midpointRA-deltaPT/2};
+}
 function updateSim() {
-
-  let vStem =
-    parseFloat(
-      stemInput.value
-    );
-
-  let deltaPT =
-    parseFloat(
-      ptInput.value
-    );
-
-  let inc =
-    parseFloat(
-      incInput.value
-    );
-
-  if (
-    !Number.isFinite(vStem)
-  ) {
-    vStem = 0;
+  const read = input => input.value.trim() === '' ? NaN : Number(input.value);
+  const status = document.getElementById('geometry-status');
+  const comparison = document.getElementById('geometry-comparison');
+  const roundtrip = document.getElementById('geometry-roundtrip');
+  let result;
+  try {
+    result = calculateMidpointCup(read(stemInput), read(ptInput), read(incInput));
+  } catch (error) {
+    targetCupAnteDisp.textContent = apparentIncDisp.textContent = '—';
+    status.textContent = error.message;
+    comparison.textContent = roundtrip.textContent = '';
+    document.getElementById('fluoroSvg').style.visibility = 'hidden';
+    ellipseParamsDisp.textContent = '入力を確認してください。';
+    return;
   }
+  document.getElementById('fluoroSvg').style.visibility = 'visible';
+  const {supine, midpointRA, midpointRI, legacyRA, midpointCheck, standing} = result;
+  const signed = n => (n >= 0 ? '+' : '') + n.toFixed(2);
+  targetCupAnteDisp.textContent = supine.ra.toFixed(2);
+  apparentIncDisp.textContent = supine.ri.toFixed(2);
+  status.textContent = `中間位目標 RA ${midpointRA.toFixed(2)}° / RI ${midpointRI.toFixed(2)}° → 臥位へ3D換算。` +
+    (supine.ra < 0 ? ' 換算結果は後捻です。前捻・後捻は楕円だけでは区別できません。' : '');
+  comparison.textContent = `旧方式の臥位RA ${legacyRA.toFixed(2)}°、RI ${midpointRI.toFixed(2)}°（入力RIを臥位に固定した比較）。新−旧：RA ${signed(supine.ra-legacyRA)}°、RI ${signed(supine.ri-midpointRI)}°。`;
+  roundtrip.textContent = `再計算：中間位 RA ${midpointCheck.ra.toFixed(2)}° / RI ${midpointCheck.ri.toFixed(2)}°、立位 RA ${standing.ra.toFixed(2)}° / RI ${standing.ri.toFixed(2)}°。`;
 
-  if (
-    !Number.isFinite(deltaPT)
-  ) {
-    deltaPT = 0;
-  }
-
-  if (
-    !Number.isFinite(inc)
-  ) {
-    inc = 40;
-  }
-
-
-  /*
-    Widmer + PT補正
-  */
-
-  const vCup =
-    37.3 -
-    0.7 * vStem -
-    deltaPT / 2.0;
-
-  targetCupAnteDisp.textContent =
-    vCup.toFixed(1);
-
-
-  /*
-    幾何
-  */
-
-  const incRad =
-    inc *
-    Math.PI /
-    180;
-
-  const visualAnte =
-    Math.max(
-      0,
-      Math.min(
-        90,
-        vCup
-      )
-    );
-
-  const anteRad =
-    visualAnte *
-    Math.PI /
-    180;
-
-  const a =
-    85;
-
-  const b =
-    a *
-    Math.sin(
-      anteRad
-    );
-
-  const tanApparent =
-    Math.tan(
-      incRad
-    ) *
-    Math.cos(
-      anteRad
-    );
-
-  const apparentIncDeg =
-    Math.atan(
-      tanApparent
-    ) *
-    180 /
-    Math.PI;
-
-  apparentIncDisp.textContent =
-    apparentIncDeg.toFixed(1);
-
+  // Under orthographic AP projection, ellipse major-axis angle equals RI.
+  // Do not apply an extra cos(RA) conversion to an already radiographic RI.
+  const anteRad = supine.ra * Math.PI / 180;
+  const a = 85;
+  const b = a * Math.sin(anteRad);
+  const apparentIncDeg = supine.ri;
 
   /*
     左右
