@@ -407,7 +407,50 @@
     #tab-research select {display:block; width:100%; padding:10px; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:6px;}
     #tab-research details {margin-top:18px;}
     #tab-research summary {cursor:pointer; color:var(--accent);}
-  </style>
+  
+/* Measurement workspace: original visual design, no third-party assets. */
+.container:has(#tab-measure.active){max-width:1080px;padding:16px;background:#111e2c;}
+#tab-measure .photo-area{gap:10px;}
+#tab-measure .file-input-wrapper{gap:6px;}
+#tab-measure .file-input-wrapper .btn-action{min-width:120px;min-height:42px;margin:0;}
+#tab-measure .zoom-controls{margin:0;padding:6px;gap:6px;}
+#tab-measure .step-guide{margin:0;font-size:.78rem;min-height:42px;}
+.measure-workspace{display:flex;flex-direction:column;border:1px solid #345064;border-radius:12px;background:#070e15;overflow:clip;}
+.measure-head{display:grid;grid-template-columns:minmax(0,1fr) 160px;gap:12px;padding:12px;background:#101d2a;border-bottom:1px solid #345064;}
+.measure-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-content:center;}
+.measure-metrics .res-box{padding:8px 5px;text-align:left;border:1px solid #294254;background:#0a1520;min-width:0;}
+.measure-metrics .res-title{font-size:.72rem;color:#a5bfce;line-height:1.3;}
+.measure-metrics .res-val{font-size:1.6rem;font-variant-numeric:tabular-nums;color:#64e6d1;line-height:1.25;}
+.measure-metrics .res-box:nth-child(n+3) .res-val{font-size:1.25rem;color:#f3cc7c;}
+.loupe-panel{margin:0;min-width:0;pointer-events:none;}
+.loupe-label{display:flex;justify-content:space-between;gap:4px;font-size:.68rem;color:#b8d4df;margin-bottom:5px;}
+#pointLoupe{width:160px;height:160px;max-width:100%;border:1px solid #4b6f81;border-radius:9px;background:#020509;touch-action:auto;}
+.loupe-panel.active #pointLoupe{border-color:#64e6d1;box-shadow:0 0 0 1px #64e6d155;}
+#tab-measure .canvas-container{border:0;border-radius:0;min-height:200px;}
+#tab-measure #photoCanvas{width:auto;max-width:100%;height:auto;max-height:58vh;}
+#tab-measure .measurement-info{margin:0;text-align:left;padding:7px 10px;border:1px solid #294254;border-radius:7px;background:#0b1722;}
+#tab-measure .extra-controls{margin-top:2px!important;padding:12px!important;background:#152332;}
+#tab-measure .extra-controls h2{font-size:.9rem!important;}
+#tab-measure .extra-controls button{font-size:.78rem;min-width:0;margin:3px 0;padding:10px;}
+#tab-measure .extra-controls input{border:1px solid #527286;border-radius:5px;padding:7px;}
+@media(max-width:600px){
+ body:has(#tab-measure.active){padding:6px;}
+ .container:has(#tab-measure.active){padding:8px;border-radius:10px;}
+ .container:has(#tab-measure.active) h1{font-size:1rem;}
+ .container:has(#tab-measure.active) .subtitle{font-size:.67rem;margin-bottom:10px;}
+ .container:has(#tab-measure.active) .tab-btn{font-size:.7rem;padding:9px 3px;}
+ .measure-head{grid-template-columns:minmax(0,1fr) 120px;padding:8px;gap:8px;}
+ .measure-metrics{gap:5px;}
+ .measure-metrics .res-box{padding:5px 4px;}
+ .measure-metrics .res-title{font-size:.61rem;}
+ .measure-metrics .res-val{font-size:1.3rem;}
+ .measure-metrics .res-box:nth-child(n+3) .res-val{font-size:1rem;}
+ #pointLoupe{width:120px;height:120px;}
+ .loupe-label{font-size:.6rem;}
+ #tab-measure .zoom-btn{padding:9px;font-size:.75rem;}
+}
+
+</style>
 </head>
 
 <body>
@@ -505,6 +548,11 @@
         （涙滴線等）をタップ
       </div>
 
+      <div class="measure-workspace">
+        <div class="measure-head">
+          <div class="measure-metrics" id="measureMetrics" aria-label="画像計測値"></div>
+          <figure class="loupe-panel" id="loupePanel"><figcaption class="loupe-label"><span id="loupeTitle">右上拡大鏡</span><span>表示の3×</span></figcaption><canvas id="pointLoupe" width="320" height="320" aria-label="移動中の計測点の拡大表示"></canvas></figure>
+        </div>
       <div class="canvas-container">
         <canvas
           id="photoCanvas"
@@ -512,9 +560,9 @@
           height="360">
         </canvas>
       </div>
+      </div>
 
-
-      <section style="margin-top:16px;padding:14px;border:1px solid var(--border);border-radius:10px">
+      <section class="extra-controls" style="margin-top:16px;padding:14px;border:1px solid var(--border);border-radius:10px">
         <h2 style="font-size:1rem;margin:0 0 12px">脚長差・画像面の傾き <small>β</small></h2>
         <p style="font-size:.8rem;line-height:1.6">既存H1–H2基準線を共用。5点計測後に小転子2点、必要なら校正2点を追加します。A/Bは画像の左右です。</p>
         <button id="enableLength" class="btn-action" type="button">脚長差・校正の点を追加</button>
@@ -1016,6 +1064,7 @@ const MAX_IMAGE_DIMENSION = 1800;
 
 let points = [];
 let measurementPointLimit = 5;
+let lastLoupeIndex = -1;
 
 let draggingIdx = -1;
 
@@ -1995,6 +2044,7 @@ function handlePointerDown(event) {
 
     });
 
+    lastLoupeIndex = points.length - 1;
     updateGuide();
 
     if (
@@ -2384,6 +2434,7 @@ function updateGuide() {
 
 function redraw() {
   updateLengthMeasurements();
+  renderPointLoupe();
 
   ctx.setTransform(
     1, 0, 0, 1, 0, 0
@@ -3375,6 +3426,46 @@ incInput.addEventListener(
 
 
 
+
+/* The loupe uses only the local image and the same internal point coordinates.
+   It has reserved space ABOVE the main image, so it never covers landmarks. */
+function renderPointLoupe(){
+  const el=document.getElementById('pointLoupe');
+  if(!el)return;
+  const lc=el.getContext('2d'),w=el.width,h=el.height;
+  lc.setTransform(1,0,0,1,0,0);lc.clearRect(0,0,w,h);lc.fillStyle='#020509';lc.fillRect(0,0,w,h);
+  const active=draggingIdx>=0 && activePointers.size<2;
+  if(active)lastLoupeIndex=draggingIdx;
+  const p=points[lastLoupeIndex];
+  document.getElementById('loupePanel').classList.toggle('active',active);
+  document.getElementById('loupeTitle').textContent=p?(active?'移動中 ':'確認 ')+pointMeta[lastLoupeIndex].label:'右上拡大鏡';
+  if(!imageLoaded||!p||activePointers.size>=2){
+    lc.fillStyle='#a5bfce';lc.font='22px sans-serif';lc.textAlign='center';lc.fillText(activePointers.size>=2?'2本指で拡大・移動':'点を動かすと拡大',w/2,h/2);return;
+  }
+  const mainRect=canvas.getBoundingClientRect(),lensRect=el.getBoundingClientRect();
+  if(mainRect.width<=0||lensRect.width<=0)return;
+  const factor=3*scale*(mainRect.width/canvas.width)*(w/lensRect.width);
+  lc.save();lc.translate(w/2,h/2);lc.scale(factor,factor);lc.translate(-p.x,-p.y);
+  lc.drawImage(img,0,0,canvas.width,canvas.height);lc.restore();
+  // Thin crosshair leaves the centre pixel visible.
+  const col=pointMeta[lastLoupeIndex].color;lc.strokeStyle='rgba(0,0,0,.85)';lc.lineWidth=5;
+  const cross=()=>{lc.beginPath();lc.moveTo(w/2-30,h/2);lc.lineTo(w/2-6,h/2);lc.moveTo(w/2+6,h/2);lc.lineTo(w/2+30,h/2);lc.moveTo(w/2,h/2-30);lc.lineTo(w/2,h/2-6);lc.moveTo(w/2,h/2+6);lc.lineTo(w/2,h/2+30);lc.stroke();};cross();lc.strokeStyle=col;lc.lineWidth=2;cross();
+  lc.strokeStyle=col;lc.lineWidth=1;lc.beginPath();lc.arc(w/2,h/2,4,0,Math.PI*2);lc.stroke();
+}
+function arrangeMeasurementWorkspace(){
+  const metrics=document.getElementById('measureMetrics');
+  const ri=document.getElementById('measuredInc').closest('.res-box');
+  const ra=document.getElementById('measuredAnte').closest('.res-box');
+  const leg=document.getElementById('legLengthResult').closest('.res-box');
+  const oblique=document.getElementById('obliquityResult').closest('.res-box');
+  const oldRows=new Set([ri.parentElement,leg.parentElement]);
+  [ri,ra,leg,oblique].forEach(box=>metrics.appendChild(box));oldRows.forEach(row=>row.remove());
+  ri.querySelector('.res-title').textContent='カップ傾斜 RI';ra.querySelector('.res-title').textContent='カップ前捻 RA';
+  leg.querySelector('.res-title').textContent='脚長差 B−A';oblique.querySelector('.res-title').textContent='画像面の傾き';
+  const observer=new ResizeObserver(()=>renderPointLoupe());observer.observe(canvas);observer.observe(document.getElementById('pointLoupe'));
+  renderPointLoupe();
+}
+
 /* Optional leg length and calibration. Existing RI/RA and simulator formulas unchanged. */
 function lengthGeometry(ps, knownMm) {
   const out = {obliquity:null, differencePx:null, differenceMm:null, mmPerPx:null};
@@ -3418,6 +3509,7 @@ document.getElementById('clearExtra').addEventListener('click',()=>{points=point
    初期化
    ========================================================= */
 
+arrangeMeasurementWorkspace();
 updateGuide();
 
 updateZoomDisplay();
@@ -3579,5 +3671,6 @@ function pstiCsv(record) {
 </script>
 </body>
 </html>
+
 
 
