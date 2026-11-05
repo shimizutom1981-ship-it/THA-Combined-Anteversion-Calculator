@@ -513,6 +513,19 @@
         </canvas>
       </div>
 
+
+      <section style="margin-top:16px;padding:14px;border:1px solid var(--border);border-radius:10px">
+        <h2 style="font-size:1rem;margin:0 0 12px">脚長差・画像面の傾き <small>β</small></h2>
+        <p style="font-size:.8rem;line-height:1.6">既存H1–H2基準線を共用。5点計測後に小転子2点、必要なら校正2点を追加します。A/Bは画像の左右です。</p>
+        <button id="enableLength" class="btn-action" type="button">脚長差・校正の点を追加</button>
+        <button id="undoExtra" class="btn-action" type="button">追加点を1点戻す</button>
+        <button id="clearExtra" class="btn-action" type="button">追加点を消去</button>
+        <p style="font-size:.8rem"><label>校正長 <input id="knownLength" type="number" value="32" min="0.01" max="1000" step="0.1" style="width:85px"> mm</label> <span id="calibrationStatus">未校正</span></p>
+        <div class="results-row"><div class="res-box"><div class="res-title">脚長差 B−A（画像右−左）</div><div id="legLengthResult" class="res-val">--</div></div><div class="res-box"><div class="res-title">画像面内の基準線傾き</div><div id="obliquityResult" class="res-val">--</div></div></div>
+        <p style="font-size:.75rem;line-height:1.6">脚長差は基準線への垂直距離差。正なら画像右の点が下方です。骨盤傾斜の前後傾ではありません。校正前はpx（内部画像座標）、校正後はmm。32 mmは仮の初期値で、実物の既知長を確認してください。</p>
+        <p style="font-size:.75rem;line-height:1.6;color:#fbbf24">追加機能は未検証の研究用試作です。診断・治療・手術判断には使用しないでください。撮影角度、拡大率、回旋、打点で値が変わります。画像と同じ深さの既知長を使用し、匿名化済みの画像だけを扱ってください。画像の外部送信・自動保存はしません。</p>
+      </section>
+
       <div class="results-row">
 
         <div class="res-box">
@@ -1002,6 +1015,7 @@ const MAX_IMAGE_DIMENSION = 1800;
    ========================================================= */
 
 let points = [];
+let measurementPointLimit = 5;
 
 let draggingIdx = -1;
 
@@ -1030,7 +1044,11 @@ const pointMeta = [
   {
     label: "C",
     color: "#38bdf8"
-  }
+  },
+  { label: "LT_A", color: "#fbbf24" },
+  { label: "LT_B", color: "#fbbf24" },
+  { label: "S1", color: "#c084fc" },
+  { label: "S2", color: "#c084fc" }
 
 ];
 
@@ -1946,7 +1964,7 @@ function handlePointerDown(event) {
   */
 
   if (
-    points.length < 5
+    points.length < measurementPointLimit
   ) {
 
     const imagePos =
@@ -1980,7 +1998,7 @@ function handlePointerDown(event) {
     updateGuide();
 
     if (
-      points.length === 5
+      points.length >= 5
     ) {
 
       calculateMeasuredAngles();
@@ -2140,7 +2158,7 @@ function handlePointerMove(event) {
       );
 
     if (
-      points.length === 5
+      points.length >= 5
     ) {
 
       calculateMeasuredAngles();
@@ -2321,9 +2339,12 @@ canvas.addEventListener(
 
 function updateGuide() {
 
-  const count =
-    points.length;
-
+  const count = points.length;
+  if (measurementPointLimit > 5 && count >= 5) {
+    const next = ['画像左の小転子 LT_A', '画像右の小転子 LT_B', '既知長の端点 S1（任意）', '既知長の反対側 S2（任意）'];
+    guideText.textContent = count < 9 ? next[count - 5] + ' をタップ（既存点はドラッグ可）' : '追加計測完了。各点をドラッグして微調整できます。';
+    return;
+  }
   if (count === 0) {
 
     guideText.innerHTML =
@@ -2362,6 +2383,7 @@ function updateGuide() {
    ========================================================= */
 
 function redraw() {
+  updateLengthMeasurements();
 
   ctx.setTransform(
     1, 0, 0, 1, 0, 0
@@ -2624,7 +2646,7 @@ function redraw() {
      ======================================================= */
 
   if (
-    points.length === 5
+    points.length >= 5
   ) {
 
     const geometry =
@@ -2940,6 +2962,7 @@ function redraw() {
     }
   );
 
+  drawLengthOverlay();
   ctx.restore();
 }
 
@@ -2951,7 +2974,7 @@ function redraw() {
 function calculateMeasuredAngles() {
 
   if (
-    points.length !== 5
+    points.length < 5
   ) {
     return;
   }
@@ -3351,6 +3374,46 @@ incInput.addEventListener(
 );
 
 
+
+/* Optional leg length and calibration. Existing RI/RA and simulator formulas unchanged. */
+function lengthGeometry(ps, knownMm) {
+  const out = {obliquity:null, differencePx:null, differenceMm:null, mmPerPx:null};
+  if(ps.length < 2) return out;
+  let dx=ps[1].x-ps[0].x, dy=ps[1].y-ps[0].y;
+  if(dx<0){dx=-dx;dy=-dy;}
+  const len=Math.hypot(dx,dy);
+  if(len<1e-8) return out;
+  out.obliquity=Math.atan2(dy,dx)*180/Math.PI;
+  if(ps.length>=7){
+    const signed=p=>(dx*(p.y-ps[0].y)-dy*(p.x-ps[0].x))/len;
+    out.differencePx=signed(ps[6])-signed(ps[5]);
+  }
+  if(ps.length>=9 && Number.isFinite(knownMm) && knownMm>0){
+    const size=Math.hypot(ps[8].x-ps[7].x,ps[8].y-ps[7].y);
+    if(size>1e-8){out.mmPerPx=knownMm/size;if(out.differencePx!==null)out.differenceMm=out.differencePx*out.mmPerPx;}
+  }
+  return out;
+}
+function updateLengthMeasurements(){
+  const field=document.getElementById('knownLength');
+  const r=lengthGeometry(points,Number(field.value));
+  document.getElementById('legLengthResult').textContent=r.differencePx===null?'--':(r.differenceMm===null?r.differencePx.toFixed(1)+' px':r.differenceMm.toFixed(1)+' mm');
+  document.getElementById('obliquityResult').textContent=r.obliquity===null?'--':(r.obliquity>=0?'+':'')+r.obliquity.toFixed(1)+'°';
+  document.getElementById('calibrationStatus').textContent=r.mmPerPx===null?(points.length>=9?'校正値・重複点を確認':'未校正'):r.mmPerPx.toFixed(4)+' mm/px';
+}
+function drawLengthOverlay(){
+  if(points.length>=7){
+    const a=points[0],b=points[1],dx=b.x-a.x,dy=b.y-a.y,q=dx*dx+dy*dy;
+    if(q>0){ctx.save();ctx.strokeStyle='#fbbf24';ctx.lineWidth=2/scale;ctx.setLineDash([5/scale,4/scale]);
+      for(const p of [points[5],points[6]]){const t=((p.x-a.x)*dx+(p.y-a.y)*dy)/q;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(a.x+t*dx,a.y+t*dy);ctx.stroke();}ctx.restore();}
+  }
+  if(points.length>=9){ctx.save();ctx.strokeStyle='#c084fc';ctx.lineWidth=2/scale;ctx.beginPath();ctx.moveTo(points[7].x,points[7].y);ctx.lineTo(points[8].x,points[8].y);ctx.stroke();ctx.restore();}
+}
+document.getElementById('knownLength').addEventListener('input',updateLengthMeasurements);
+document.getElementById('enableLength').addEventListener('click',()=>{measurementPointLimit=9;updateGuide();redraw();});
+document.getElementById('undoExtra').addEventListener('click',()=>{if(points.length>5)points.pop();draggingIdx=-1;updateGuide();redraw();});
+document.getElementById('clearExtra').addEventListener('click',()=>{points=points.slice(0,5);measurementPointLimit=5;draggingIdx=-1;updateGuide();redraw();});
+
 /* =========================================================
    初期化
    ========================================================= */
@@ -3516,4 +3579,5 @@ function pstiCsv(record) {
 </script>
 </body>
 </html>
+
 
