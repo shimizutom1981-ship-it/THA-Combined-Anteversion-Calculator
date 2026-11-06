@@ -31,5 +31,6 @@ context.updateSim();assert.equal(context.targetCupAnteDisp.textContent,'19.43');
 assert.equal(context.cupEllipse.attrs.transform,'rotate(38.758108799838766)');
 context.currentSide='left';context.updateSim();assert.equal(context.cupEllipse.attrs.transform,'rotate(-38.758108799838766)');
 context.stemInput.value='';context.updateSim();assert.equal(context.targetCupAnteDisp.textContent,'—');assert.equal(nodes.fluoroSvg.style.visibility,'hidden');
-context.stemInput.value='60';context.ptInput.value='0';context.updateSim();assert.ok(context.cupEllipse.attrs.ry>0);assert.match(nodes['geometry-status'].textContent,/後捻/);
+context.stemInput.value='60';context.ptInput.value='0';context.updateSim();assert.ok(context.cupEllipse.attrs.ry>0);assert.match(nodes['geometry-status'].textContent,/後捻/);assert.match(context.ellipseParamsDisp.textContent,/短長軸比\(b\/a\): 0\.08/);
 console.log(`PASS: syntax, ${count} independent 3D round-trips, identity, signed PT/RA, validation, UI and left/right projection`);
+
