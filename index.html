@@ -628,7 +628,7 @@
         <br>
 
         2本指：拡大・移動 |
-        1本指：打点・ドラッグ微調整
+        タップ：打点／長押し・Shift＋ドラッグ：微調整
 
       </div>
 
@@ -1066,6 +1066,47 @@ let measurementPointLimit = 5;
 let lastLoupeIndex = -1;
 
 let draggingIdx = -1;
+let pendingPointDrag = null;
+let pointDragTimer = null;
+let pointDragOffset = {x:0,y:0};
+const POINT_HOLD_MS = 450;
+
+function cancelPendingPointDrag() {
+  if (pointDragTimer !== null) clearTimeout(pointDragTimer);
+  pointDragTimer = null;
+  pendingPointDrag = null;
+}
+
+function startPointDrag(index, pos) {
+  cancelPendingPointDrag();
+  const imagePos = screenToImageCoords(pos.x,pos.y);
+  pointDragOffset = {x:points[index].x-imagePos.x,y:points[index].y-imagePos.y};
+  draggingIdx = index;
+  lastLoupeIndex = index;
+  redraw();
+}
+
+function armPointDrag(index, pos, event) {
+  cancelPendingPointDrag();
+  lastLoupeIndex = index;
+  if (event.shiftKey) { startPointDrag(index,pos); return; }
+  pendingPointDrag = {index, pointerId:event.pointerId, start:pos};
+  pointDragTimer = setTimeout(()=>{
+    const pending=pendingPointDrag;
+    if (!pending || activePointers.size!==1 || !activePointers.has(pending.pointerId)) return;
+    startPointDrag(pending.index,activePointers.get(pending.pointerId));
+  },POINT_HOLD_MS);
+  redraw();
+}
+
+function checkPendingPointDrag(event,pos) {
+  if (!pendingPointDrag || pendingPointDrag.pointerId!==event.pointerId) return;
+  if (event.shiftKey) {startPointDrag(pendingPointDrag.index,pos);return;}
+  const rect=canvas.getBoundingClientRect();
+  const distance=Math.hypot((pos.x-pendingPointDrag.start.x)*rect.width/canvas.width,
+    (pos.y-pendingPointDrag.start.y)*rect.height/canvas.height);
+  if(distance>8) cancelPendingPointDrag();
+}
 
 const pointMeta = [
 
@@ -1283,6 +1324,8 @@ function setupCanvasFromImage() {
    ========================================================= */
 
 function resetPoints() {
+
+  cancelPendingPointDrag();
 
   points = [];
   measurementPointLimit = 5;
@@ -1823,6 +1866,7 @@ function handlePointerDown(event) {
   if (!imageLoaded) {
     return;
   }
+  if (event.button !== undefined && event.button !== 0) return;
 
   event.preventDefault();
 
@@ -1854,6 +1898,8 @@ function handlePointerDown(event) {
   if (
     activePointers.size === 2
   ) {
+
+    cancelPendingPointDrag();
 
     draggingIdx =
       -1;
@@ -1985,13 +2031,13 @@ function handlePointerDown(event) {
     nearestIdx !== -1
   ) {
 
-    draggingIdx =
-      nearestIdx;
-
-    redraw();
+    armPointDrag(nearestIdx,pos,event);
 
     return;
   }
+
+  // Shift is only for editing an existing point, never for adding one.
+  if (event.shiftKey) return;
 
 
   /*
@@ -2073,6 +2119,7 @@ function handlePointerMove(event) {
     event.pointerId,
     pos
   );
+  checkPendingPointDrag(event,pos);
 
 
   /*
@@ -2182,7 +2229,7 @@ function handlePointerMove(event) {
         0,
         Math.min(
           canvas.width,
-          imagePos.x
+          imagePos.x + pointDragOffset.x
         )
       );
 
@@ -2191,7 +2238,7 @@ function handlePointerMove(event) {
         0,
         Math.min(
           canvas.height,
-          imagePos.y
+          imagePos.y + pointDragOffset.y
         )
       );
 
@@ -2212,6 +2259,8 @@ function handlePointerMove(event) {
    ========================================================= */
 
 function handlePointerEnd(event) {
+
+  cancelPendingPointDrag();
 
   activePointers.delete(
     event.pointerId
@@ -2277,6 +2326,8 @@ canvas.addEventListener(
   "lostpointercapture",
   function (event) {
 
+    cancelPendingPointDrag();
+
     activePointers.delete(
       event.pointerId
     );
@@ -2290,6 +2341,8 @@ canvas.addEventListener(
     redraw();
   }
 );
+
+canvas.addEventListener('contextmenu',event=>event.preventDefault());
 
 
 /* =========================================================
@@ -2380,7 +2433,7 @@ function updateGuide() {
   const count = points.length;
   if (measurementPointLimit > 5 && count >= 5) {
     const next = ['画像左の小転子 LT_A', '画像右の小転子 LT_B', '既知長の端点 S1（任意）', '既知長の反対側 S2（任意）'];
-    guideText.textContent = count < 9 ? next[count - 5] + ' をタップ（既存点はドラッグ可）' : '追加計測完了。各点をドラッグして微調整できます。';
+    guideText.textContent = count < 9 ? next[count - 5] + ' をタップ（既存点は長押し・Shift＋ドラッグで移動）' : '追加計測完了。各点を長押し、またはShift＋ドラッグで微調整できます。';
     return;
   }
   if (count === 0) {
@@ -2411,7 +2464,7 @@ function updateGuide() {
   } else {
 
     guideText.innerHTML =
-      '✅ <strong>5点計測完了</strong> — O・反対側rim・短軸を自動計算（各点ドラッグ可）';
+      '✅ <strong>5点計測完了</strong> — O・反対側rim・短軸を自動計算（長押し・Shift＋ドラッグで移動）';
   }
 }
 
@@ -3665,6 +3718,7 @@ function pstiCsv(record) {
 </script>
 </body>
 </html>
+
 
 
 
