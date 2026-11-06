@@ -3052,6 +3052,15 @@ function calculateMeasuredAngles() {
   const H2 =
     points[1];
 
+  // A reference shorter than 2 internal-image pixels is not usable.
+  // A coincident reference pair has no direction; atan2(0, 0) would
+  // otherwise produce a plausible but undefined reference-corrected RI.
+  if (Math.hypot(H2.x - H1.x, H2.y - H1.y) < 2) {
+    measuredIncDisp.textContent = measuredAnteDisp.textContent = "--";
+    measurementInfo.textContent = "基準線H1–H2が重複または近すぎます。端点を離して再計測してください。";
+    return;
+  }
+
   const A =
     points[2];
 
@@ -3491,7 +3500,7 @@ function lengthGeometry(ps, knownMm) {
   let dx=ps[1].x-ps[0].x, dy=ps[1].y-ps[0].y;
   if(dx<0){dx=-dx;dy=-dy;}
   const len=Math.hypot(dx,dy);
-  if(len<1e-8) return out;
+  if(len<2) return out;
   out.obliquity=Math.atan2(dy,dx)*180/Math.PI;
   if(ps.length>=7){
     const signed=p=>(dx*(p.y-ps[0].y)-dy*(p.x-ps[0].x))/len;
@@ -3689,6 +3698,7 @@ function pstiCsv(record) {
 </script>
 </body>
 </html>
+
 
 
 
