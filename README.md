@@ -29,6 +29,8 @@ PSTIは研究用・自施設未検証です。シミュレーターへ自動転�
 
 ## 検証
 `node tests/midpoint.test.cjs`
+`node tests/measurement-safety.test.cjs`
+`node tests/psti-records.test.cjs`
 独立したRodrigues回転による210条件の中間位復元、符号、無変化、入力エラー、左右表示、後捻表示を確認。
 
 ## 更新記録
@@ -38,3 +40,8 @@ PSTIは研究用・自施設未検証です。シミュレーターへ自動転�
 ## 測定図の出典
 assets/PSTI_measurement_original.png：Kobayashi et al., Bone Jt Open 2026;7:1280–1287, Fig.1右下パネルの切り出し（既存Sites版から継承）。
 [原著](https://doi.org/10.1302/2633-1462.710.BJO-2026-0113.R1) / [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+
+
+## 2026-11-06 計測安全性の修正
+重複基準点・長軸点、非有限座標、短軸が長軸を超える打点では角度を表示しません。C点は中心を通る短軸とrimの交点に置き、長軸方向へずれた場合は警告します。垂直投影は任意のrim点から真の短軸を復元するものではなく、式自体は変更していません。画像切替・失敗時は旧計測を消去し、古い読込完了が新画像を上書きしないようにしました。後捻でも軸比は非負で表示し、ページ拡大制限を解除しました。
+回帰テストは合成座標とDOM/Image doublesによるものです。iPhone実機、カメラ、EXIF回転、OS文字拡大、マルチタッチは別途実機確認が必要です。臨床妥当性の検証ではありません。
