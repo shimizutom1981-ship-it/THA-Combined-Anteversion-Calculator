@@ -427,7 +427,7 @@
 #pointLoupe{width:160px;height:160px;max-width:100%;border:1px solid #4b6f81;border-radius:9px;background:#020509;touch-action:auto;}
 .loupe-panel.active #pointLoupe{border-color:#64e6d1;box-shadow:0 0 0 1px #64e6d155;}
 #tab-measure .canvas-container{border:0;border-radius:0;min-height:200px;}
-#tab-measure #photoCanvas{width:auto;max-width:100%;height:auto;max-height:58vh;}
+#tab-measure #photoCanvas{flex:none;width:100%;max-width:none;height:auto;max-height:none;}
 #tab-measure .measurement-info{margin:0;text-align:left;padding:7px 10px;border:1px solid #294254;border-radius:7px;background:#0b1722;}
 #tab-measure .extra-controls{margin-top:2px!important;padding:12px!important;background:#152332;}
 #tab-measure .extra-controls h2{font-size:.9rem!important;}
@@ -1149,6 +1149,8 @@ function initializeCanvas() {
   canvas.height =
     360;
 
+  fitPhotoCanvas();
+
   imageLoaded =
     false;
 
@@ -1239,6 +1241,19 @@ fileInput.addEventListener(
    Canvas画像サイズ
    ========================================================= */
 
+// Use one display scale for both axes. Flex shrinking and independent CSS
+// max-width/max-height constraints must never distort measurement geometry.
+function fitPhotoCanvas() {
+  const availableWidth = canvas.parentElement.clientWidth;
+  if (!availableWidth || !canvas.width || !canvas.height) return;
+  const displayScale = Math.min(
+    availableWidth / canvas.width,
+    window.innerHeight * 0.58 / canvas.height
+  );
+  canvas.style.width = (canvas.width * displayScale) + 'px';
+  canvas.style.height = (canvas.height * displayScale) + 'px';
+}
+
 function setupCanvasFromImage() {
 
   if (
@@ -1289,6 +1304,7 @@ function setupCanvasFromImage() {
       )
     );
 
+  fitPhotoCanvas();
   redraw();
 }
 
@@ -3462,7 +3478,9 @@ function arrangeMeasurementWorkspace(){
   [ri,ra,leg,oblique].forEach(box=>metrics.appendChild(box));oldRows.forEach(row=>row.remove());
   ri.querySelector('.res-title').textContent='カップ傾斜 RI';ra.querySelector('.res-title').textContent='カップ前捻 RA';
   leg.querySelector('.res-title').textContent='脚長差 B−A';oblique.querySelector('.res-title').textContent='画像面の傾き';
-  const observer=new ResizeObserver(()=>renderPointLoupe());observer.observe(canvas);observer.observe(document.getElementById('pointLoupe'));
+  const observer=new ResizeObserver(()=>{fitPhotoCanvas();renderPointLoupe();});observer.observe(canvas.parentElement);observer.observe(document.getElementById('pointLoupe'));
+  window.addEventListener('resize',()=>{fitPhotoCanvas();renderPointLoupe();});
+  fitPhotoCanvas();
   renderPointLoupe();
 }
 
@@ -3671,6 +3689,7 @@ function pstiCsv(record) {
 </script>
 </body>
 </html>
+
 
 
 
