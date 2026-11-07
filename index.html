@@ -566,11 +566,49 @@
         <button id="enableLength" class="btn-action" type="button">脚長差・校正の点を追加</button>
         <button id="undoExtra" class="btn-action" type="button">追加点を1点戻す</button>
         <button id="clearExtra" class="btn-action" type="button">追加点を消去</button>
-        <p style="font-size:.8rem"><label>校正長 <input id="knownLength" type="number" value="32" min="0.01" max="1000" step="0.1" style="width:85px"> mm</label> <span id="calibrationStatus">未校正</span></p>
+        <p style="font-size:.8rem"><label>脚長差の校正源 <select id="lengthCalibrationSource"><option value="manual">脚長差用 S1–S2</option><option value="cup">カップ外径 A–B（下で設定）</option></select></label><br><label>脚長差用S1–S2の既知長 <input id="knownLength" type="number" placeholder="未入力" min="0.01" max="1000" step="0.1" style="width:85px"> mm</label><br><span id="calibrationStatus">未校正</span></p>
         <div class="results-row"><div class="res-box"><div class="res-title">脚長差 B−A（画像右−左）</div><div id="legLengthResult" class="res-val">--</div></div><div class="res-box"><div class="res-title">画像面内の基準線傾き</div><div id="obliquityResult" class="res-val">--</div></div></div>
-        <p style="font-size:.75rem;line-height:1.6">脚長差は基準線への垂直距離差。正なら画像右の点が下方です。骨盤傾斜の前後傾ではありません。校正前はpx（内部画像座標）、校正後はmm。32 mmは仮の初期値で、実物の既知長を確認してください。</p>
+        <p style="font-size:.75rem;line-height:1.6">脚長差は基準線への垂直距離差。正なら画像右の点が下方です。骨盤傾斜の前後傾ではありません。校正前はpx（内部画像座標）、校正後はmm。既知長に初期値は入れません。実物の既知長を確認してください。選択した校正源が無効な場合、別の校正源へ自動で切り替えません。</p>
         <p style="font-size:.75rem;line-height:1.6;color:#fbbf24">追加機能は未検証の研究用試作です。診断・治療・手術判断には使用しないでください。撮影角度、拡大率、回旋、打点で値が変わります。画像と同じ深さの既知長を使用し、匿名化済みの画像だけを扱ってください。画像の外部送信・自動保存はしません。</p>
       </section>
+
+      <section class="extra-controls" style="padding:14px;border:1px solid var(--border);border-radius:10px">
+        <h2 style="font-size:1rem;margin:0 0 12px">カップ外径による任意校正 <small>β・参考倍率</small></h2>
+        <p style="font-size:.8rem;line-height:1.6">カップ角度計測のA–B長から、<strong>使用したカップの実際の外径 ÷ A–Bのpx長</strong>で倍率を計算します。脚長差とoffsetそれぞれの「校正源」で選択した場合だけ使います。</p>
+        <p style="font-size:.8rem;line-height:1.6;color:#fbbf24">A/Bは元々「開口縁の長軸両端」です。<strong>内側の開口縁・ライナー・骨頭の径は外径ではありません。</strong>角度用のA/Bが外径に対応しない場合はA/Bを流用せず、専用S1–S2校正を使ってください。校正のためにA/Bを別の輪郭へ移すとRI/RAも変わります。</p>
+        <label style="font-size:.85rem">使用カップの実際の外径 <input id="cupOuterDiameter" type="number" min="0.01" max="1000" step="0.1" placeholder="未入力" style="width:90px"> mm</label>
+        <p style="font-size:.8rem;line-height:1.6"><label><input id="cupCalibrationConfirmed" type="checkbox"> 入力外径がA/Bで指定した円形外縁の実径に対応し、A/Bがその投影楕円の長軸両端であることを確認した。円形外縁／球状・半球状シェルの前提と、投影・深さ・画像歪みによる誤差を理解した。</label></p>
+        <p id="cupCalibrationStatus" role="status" style="font-size:.8rem;line-height:1.6">未校正</p>
+        <p style="font-size:.75rem;line-height:1.6">メーカーのサイズ呼称、リーマー径、ライナー内径は、実際の外径と同じとは限りません。楕円・非対称・増大型カップ、外縁を同定できない画像には使用しないでください。円の平行投影では長軸が径を保つ前提ですが、X線の透視投影・斜め撮影した画面・縦横比の変形・計測部位の深さの差では誤差が残ります。A/Bまたは外径を変更すると確認を解除します。</p>
+      </section>
+
+      <details id="offsetPanel" class="extra-controls" style="padding:14px;border:1px solid var(--border);border-radius:10px">
+        <summary style="cursor:pointer;font-weight:700;color:var(--accent)">Femoral / global offset（2D AP・研究用）</summary>
+        <p style="font-size:.8rem;line-height:1.6">上で選択した画像を使います。カップ・脚長差の点とは独立した打点です。<strong>カップ楕円中心は骨頭中心として使用しません。</strong>画像左右は患者の左右と同じとは限りません。</p>
+        <label>計測する側 <select id="offsetSide"><option value="imageLeft">画像左</option><option value="imageRight">画像右</option></select></label>
+        <div id="offsetPointButtons" style="display:flex;flex-wrap:wrap;gap:5px;margin:10px 0"></div>
+        <p id="offsetGuide" role="status" style="font-size:.8rem;line-height:1.5"></p>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin:8px 0">
+          <button id="offsetZoomIn" type="button">＋ 拡大</button><button id="offsetZoomOut" type="button">－ 縮小</button><button id="offsetZoomReset" type="button">全体表示</button><button id="offsetCancelPlacement" type="button">打点選択を解除</button><button id="offsetClearSide" type="button">この側の7点を消去</button><button id="offsetClearAll" type="button">offset全点を消去</button>
+        </div>
+        <p style="font-size:.75rem">打点ボタンを選び、画像をタップ。既存点は長押し、またはShift＋ドラッグで移動。打点選択を解除すると、空白のドラッグで画像を移動できます。移動・拡大時も計算座標は変わりません。</p>
+        <canvas id="offsetCanvas" width="540" height="360" style="display:block;width:100%;height:auto;touch-action:none;background:#020617;outline:1px solid var(--border)"></canvas>
+        <p style="font-size:.8rem;line-height:1.5"><label>offsetの校正源 <select id="offsetCalibrationSource"><option value="manual">offset専用 S1–S2</option><option value="cup">カップ外径 A–B（上で設定）</option></select></label><br><label>offset専用S1–S2の既知長 <input id="offsetKnownLength" type="number" min="0.01" max="1000" step="0.1" placeholder="未入力" style="width:90px"> mm</label><br><label><input id="offsetScaleConfirmed" type="checkbox"> S1–S2が実物の既知長に対応し、骨頭とほぼ同じ深さの校正物であることを確認した</label><br><span id="offsetCalibrationStatus">未校正</span></p>
+        <div id="offsetResults" role="status" aria-live="polite" style="font-size:.9rem;line-height:1.7"></div>
+        <p id="offsetWarnings" style="font-size:.8rem;line-height:1.6;color:#fbbf24"></p>
+        <details style="font-size:.8rem;line-height:1.6"><summary>点の取り方と計算の定義</summary><ul>
+          <li>TD-L / TD-R：画像左・右の骨性U字状の涙滴輪郭の最下点。暗い腔底ではなく骨性輪郭を選びます。閉鎖孔や任意の水平線を代用しません。</li>
+          <li>H1–H3：対象側の骨頭輪郭上で十分離れた3点。円の中心を算出します。描画された円が骨頭全体に合うことを確認してください。</li>
+          <li>F1a / F1b、F2a / F2b：骨幹の離れた2断面で、それぞれ同じ高さの対向する皮質2点。2つの中点を結ぶ直線を大腿骨軸とします。ステム軸を代用しません。</li>
+          <li>FO：骨頭中心から大腿骨軸（延長線）への垂直距離。</li>
+          <li>AO：同側涙滴点を通り涙滴間線に垂直な線から、骨頭中心までの外側方向の距離。</li>
+          <li>Global offset：FO＋涙滴基準AO。FOとAOは測る方向が異なるため、単一の水平線分とは限りません。骨盤正中線を使う定義とは区別してください。</li>
+          <li>S1 / S2：既知長の両端。未校正では内部画像座標のpxだけを表示します。脚長差用S1–S2は自動転用しません。カップ外径を使う場合は校正源で明示的に選択します。</li>
+        </ul></details>
+        <p style="font-size:.75rem;line-height:1.6;color:#fbbf24">未検証の研究用試作です。診断・治療・手術判断には使用しないでください。大腿骨回旋、骨盤回旋・傾斜、撮影姿勢、倍率、打点の影響を受け、3Dの真値ではありません。校正確認だけで実際の倍率精度は保証されません。画像変更・点リセットでoffsetと校正も消去します。</p>
+        <button id="offsetExportJson" type="button">offset打点・結果 JSON保存</button> <button id="offsetExportCsv" type="button">offset結果 CSV保存</button>
+        <p style="font-size:.75rem">画像・患者識別情報は保存ファイルに含めません。自動保存や外部送信は行いません。JSONは記録用で、この版は再読込には未対応です。</p>
+      </details>
 
       <div class="results-row">
 
@@ -944,6 +982,9 @@
 
 </div>
 
+<script src="offset-geometry.js"></script>
+<script src="cup-calibration.js"></script>
+<script src="offset-ui.js"></script>
 <script>
 "use strict";
 
@@ -1324,6 +1365,9 @@ function setupCanvasFromImage() {
    ========================================================= */
 
 function resetPoints() {
+
+  if (typeof resetOffsetMeasurements === "function") resetOffsetMeasurements();
+  if (typeof resetCupCalibration === "function") resetCupCalibration();
 
   cancelPendingPointDrag();
 
@@ -2474,6 +2518,7 @@ function updateGuide() {
    ========================================================= */
 
 function redraw() {
+  if (typeof renderOffsetMeasurements === "function") renderOffsetMeasurements();
   updateLengthMeasurements();
   renderPointLoupe();
 
@@ -3535,9 +3580,12 @@ function lengthGeometry(ps, knownMm) {
 function updateLengthMeasurements(){
   const field=document.getElementById('knownLength');
   const r=lengthGeometry(points,Number(field.value));
+  const cup=cupCalibrationResult();
+  const cupSelected=document.getElementById('lengthCalibrationSource').value==='cup';
+  if(cupSelected){r.mmPerPx=cup.mmPerPx;r.differenceMm=r.differencePx!==null&&r.mmPerPx!==null?r.differencePx*r.mmPerPx:null;}
   document.getElementById('legLengthResult').textContent=r.differencePx===null?'--':(r.differenceMm===null?r.differencePx.toFixed(1)+' px':r.differenceMm.toFixed(1)+' mm');
   document.getElementById('obliquityResult').textContent=r.obliquity===null?'--':(r.obliquity>=0?'+':'')+r.obliquity.toFixed(1)+'°';
-  document.getElementById('calibrationStatus').textContent=r.mmPerPx===null?(points.length>=9?'校正値・重複点を確認':'未校正'):r.mmPerPx.toFixed(4)+' mm/px';
+  document.getElementById('calibrationStatus').textContent='使用する校正：'+(cupSelected?'カップ外径 A–B':'脚長差用 S1–S2')+' ｜ '+(r.mmPerPx===null?(cupSelected?cup.status:points.length>=9?'既知長・重複点を確認':'未校正'):r.mmPerPx.toFixed(4)+' mm/px'+(cupSelected?'（部位間の拡大率差を含む参考換算）':''));
 }
 function drawLengthOverlay(){
   if(points.length>=7){
@@ -3718,6 +3766,7 @@ function pstiCsv(record) {
 </script>
 </body>
 </html>
+
 
 
 

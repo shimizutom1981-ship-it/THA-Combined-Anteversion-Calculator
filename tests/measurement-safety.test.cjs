@@ -13,7 +13,7 @@ assert.match(calc([[0,0],[100,0],[0,0],[100,0],[80,20]])[2],/Cが短軸線から
 assert.ok(!/maximum-scale|user-scalable=no/.test(h));
 // Real reset and load callbacks with image/DOM doubles: no patient images or network.
 const images=[],revoked=[];let change;
-Object.assign(ctx,{measurementPointLimit:9,lastLoupeIndex:8,draggingIdx:8,activePointers:new Map([[1,{}]]),updateGuide(){},redraw(){},resetZoom(){},initializeCanvas(){},setupCanvasFromImage(){},imageLoaded:true,img:{},imageLoadGeneration:0,currentObjectURL:null,
+Object.assign(ctx,{cancelPendingPointDrag(){},measurementPointLimit:9,lastLoupeIndex:8,draggingIdx:8,activePointers:new Map([[1,{}]]),updateGuide(){},redraw(){},resetZoom(){},initializeCanvas(){},setupCanvasFromImage(){},imageLoaded:true,img:{},imageLoadGeneration:0,currentObjectURL:null,
  fileInput:{value:'old',addEventListener(name,fn){change=fn;}},URL:{createObjectURL:()=>`blob:${images.length}`,revokeObjectURL:u=>revoked.push(u)},Image:function(){images.push(this);}});
 vm.runInContext(extract('function resetPoints()','document\n  .getElementById("resetPointsButton")'),ctx);
 vm.runInContext(extract('fileInput.addEventListener("change"','/* =========================================================\n   Canvas画像サイズ'),ctx);
@@ -28,3 +28,4 @@ for(const [w,ht,vw,vh] of [[1800,900,360,800],[900,1800,360,800],[900,900,360,80
  Object.assign(ctx.canvas,{width:w,height:ht});ctx.canvas.parentElement.clientWidth=vw;ctx.window.innerHeight=vh;ctx.fitPhotoCanvas();assert.ok(Math.abs(parseFloat(ctx.canvas.style.width)/parseFloat(ctx.canvas.style.height)-w/ht)<1e-12);
 }
 console.log('PASS measurement safety: valid/invalid geometry, C warning, zoom accessibility, image failure/reset/stale callbacks, four aspect-ratio cases');
+
