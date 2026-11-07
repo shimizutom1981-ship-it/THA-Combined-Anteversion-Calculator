@@ -3108,6 +3108,16 @@ function redraw() {
    角度計測
    ========================================================= */
 
+// Internal resized-image pixels (maximum image dimension: 1800).
+// Reject near-coincident clicks; this is not a clinical accuracy threshold.
+// Keep this helper shared by angle, leg-length and overlay calculations.
+function hasUsableReference(ps) {
+  if (ps.length < 2 || !ps.slice(0,2).every(p =>
+    Number.isFinite(p.x) && Number.isFinite(p.y))) return false;
+  const length = Math.hypot(ps[1].x-ps[0].x, ps[1].y-ps[0].y);
+  return Number.isFinite(length) && length >= 2;
+}
+
 function calculateMeasuredAngles() {
 
   if (
@@ -3124,8 +3134,8 @@ function calculateMeasuredAngles() {
   if (!points.slice(0,5).every(p => Number.isFinite(p.x) && Number.isFinite(p.y))) {
     invalid('打点座標を確認してください。'); return;
   }
-  if (Math.hypot(points[1].x-points[0].x, points[1].y-points[0].y) < 1e-8) {
-    invalid('H1とH2が重なっています。基準線の両端を離してください。'); return;
+  if (!hasUsableReference(points)) {
+    invalid('基準線H1–H2が重複または近すぎます。離れた解剖学的基準点に打ち直してください。'); return;
   }
 
   const H1 =
@@ -3561,11 +3571,10 @@ function arrangeMeasurementWorkspace(){
 /* Optional leg length and calibration. Existing RI/RA and simulator formulas unchanged. */
 function lengthGeometry(ps, knownMm) {
   const out = {obliquity:null, differencePx:null, differenceMm:null, mmPerPx:null};
-  if(ps.length < 2) return out;
+  if(!hasUsableReference(ps)) return out;
   let dx=ps[1].x-ps[0].x, dy=ps[1].y-ps[0].y;
   if(dx<0){dx=-dx;dy=-dy;}
   const len=Math.hypot(dx,dy);
-  if(len<1e-8) return out;
   out.obliquity=Math.atan2(dy,dx)*180/Math.PI;
   if(ps.length>=7){
     const signed=p=>(dx*(p.y-ps[0].y)-dy*(p.x-ps[0].x))/len;
@@ -3590,7 +3599,7 @@ function updateLengthMeasurements(){
 function drawLengthOverlay(){
   if(points.length>=7){
     const a=points[0],b=points[1],dx=b.x-a.x,dy=b.y-a.y,q=dx*dx+dy*dy;
-    if(q>0){ctx.save();ctx.strokeStyle='#fbbf24';ctx.lineWidth=2/scale;ctx.setLineDash([5/scale,4/scale]);
+    if(hasUsableReference(points)){ctx.save();ctx.strokeStyle='#fbbf24';ctx.lineWidth=2/scale;ctx.setLineDash([5/scale,4/scale]);
       for(const p of [points[5],points[6]]){const t=((p.x-a.x)*dx+(p.y-a.y)*dy)/q;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(a.x+t*dx,a.y+t*dy);ctx.stroke();}ctx.restore();}
   }
   if(points.length>=9){ctx.save();ctx.strokeStyle='#c084fc';ctx.lineWidth=2/scale;ctx.beginPath();ctx.moveTo(points[7].x,points[7].y);ctx.lineTo(points[8].x,points[8].y);ctx.stroke();ctx.restore();}

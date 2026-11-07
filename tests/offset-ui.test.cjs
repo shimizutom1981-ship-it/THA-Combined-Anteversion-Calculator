@@ -55,6 +55,7 @@ el('cupCalibrationConfirmed').checked=true;el('cupCalibrationConfirmed').emit('c
 el('cupOuterDiameter').value='60';el('cupOuterDiameter').emit('input');assert.equal(run("offsetResult('imageLeft').globalMm"),null);
 el('cupCalibrationConfirmed').checked=true;el('cupCalibrationConfirmed').emit('change');assert.equal(run("offsetResult('imageLeft').globalMm"),43.199999999999996);
 // Leg-length selector uses same cup scale; does not silently fall back to valid manual 100 px / 30 mm.
+vm.runInContext(h.slice(h.indexOf('function hasUsableReference('),h.indexOf('function calculateMeasuredAngles(')),c);
 vm.runInContext(h.slice(h.indexOf('function lengthGeometry('),h.indexOf('function drawLengthOverlay(')),c);
 el('knownLength').value='30';el('lengthCalibrationSource').value='manual';run('updateLengthMeasurements()');assert.equal(el('legLengthResult').textContent,'6.0 mm');
 el('lengthCalibrationSource').value='cup';run('updateLengthMeasurements()');assert.equal(el('legLengthResult').textContent,'4.8 mm');

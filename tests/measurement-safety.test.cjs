@@ -2,7 +2,7 @@ const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/st
 const h=fs.readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');
 const extract=(start,end)=>h.slice(h.indexOf(start),h.indexOf(end,h.indexOf(start)));
 const ctx=vm.createContext({points:[],measuredIncDisp:{},measuredAnteDisp:{},measurementInfo:{}});
-vm.runInContext(extract('function getCupGeometry()','function handlePointerDown(')+extract('function calculateMeasuredAngles()','let currentSide ='),ctx);
+vm.runInContext(extract('function getCupGeometry()','function handlePointerDown(')+extract('function hasUsableReference(ps)','let currentSide ='),ctx);
 const calc=pts=>{ctx.points=pts.map(([x,y])=>({x,y}));ctx.calculateMeasuredAngles();return [ctx.measuredIncDisp.textContent,ctx.measuredAnteDisp.textContent,ctx.measurementInfo.textContent];};
 assert.deepEqual(calc([[0,0],[100,0],[0,0],[100,0],[50,25]]).slice(0,2),['0.0','30.0']);
 for(const pts of [ [[0,0],[100,0],[0,0],[100,0],[50,100]], [[0,0],[0,0],[0,0],[100,100],[25,75]], [[0,0],[100,0],[0,0],[0,0],[25,75]], [[0,0],[100,0],[0,0],[100,0],[NaN,25]] ]) {
