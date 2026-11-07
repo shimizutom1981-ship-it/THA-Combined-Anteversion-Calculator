@@ -86,3 +86,17 @@ assets/PSTI_measurement_original.png：Kobayashi et al., Bone Jt Open 2026;7:128
 円形外縁の平行投影で長軸が実径を保つ前提です。X線の透視投影、撮影した画面の遠近歪み、縦横比の変形、カップと大腿骨／対側股関節の深さの差による倍率誤差は残ります。ユーザー確認は臨床精度の検証を意味しません。
 
 `node tests/cup-calibration.test.cjs` と `node tests/offset-ui.test.cjs` で数式・校正源・失効・保存・脚長差への適用を検証します。
+
+## 2026-11-08 PSTI 写真打点
+写真計測の PSTI パネルに、左右涙痕、左右坐骨先端、恥骨結合上縁の独立5点を追加。
+- 坐骨先端：涙痕間線への下方垂直距離が最大となる輪郭点を左右別に手動選択（ユーザー指定）。輪郭全体の自動検出・最大点保証はしません。
+- PSTI：左右坐骨点を結ぶ線から恥骨結合上縁への符号付き垂直距離。上方が正。涙痕間線は点選択の基準です。
+- 旧い未指定「恥骨結合」点とは異なる `pubicSuperior` として保存。教師データ、旧点、既存PSTI手入力を暗黙に流用・再解釈しません。写真PSTIのJSON読込は未実装です。
+- 未校正はpx。専用既知長または明示的に選択したカップ外径校正の確認後だけmm。校正変更で確認を解除。カップと骨盤の深さの差による倍率誤差に注意。
+- JSON/CSVに定義・撮影日・姿勢・研究ID・座標・校正・距離を保存。画像は含みません。画像変更・失敗・全打点リセットで消去。
+- 経時変化の角度推定は追加していません。既存の術前仰臥位→立位推定式を術後の時間差へ転用しません。異なる画像のpx差を比較してはいけません。
+出典：Muir et al., [Cureus 2019](https://pmc.ncbi.nlm.nih.gov/articles/PMC6939981/)。点の追加選択規則と本アプリの臨床妥当性は未検証です。
+配信時には `psti-photo-geometry.js` と `psti-photo-ui.js` も同じ階層に配置します。
+
+検証：`node tests/psti-photo.test.cjs`、`node tests/psti-photo-ui.test.cjs`。
+実ブラウザ用：`node tests/psti-photo-browser.test.cjs`（今回の環境では Chromium の socket 作成制限で起動失敗。DOM doubles の合格は実ブラウザ合格ではありません）。

@@ -582,7 +582,26 @@
         <p style="font-size:.75rem;line-height:1.6">メーカーのサイズ呼称、リーマー径、ライナー内径は、実際の外径と同じとは限りません。楕円・非対称・増大型カップ、外縁を同定できない画像には使用しないでください。円の平行投影では長軸が径を保つ前提ですが、X線の透視投影・斜め撮影した画面・縦横比の変形・計測部位の深さの差では誤差が残ります。A/Bまたは外径を変更すると確認を解除します。</p>
       </section>
 
-      <details id="offsetPanel" class="extra-controls" style="padding:14px;border:1px solid var(--border);border-radius:10px">
+      <details id="pstiPhotoPanel" class="card" style="margin:12px;padding:16px">
+<summary>PSTI 写真打点（研究用・距離のみ）</summary>
+<p>上の写真計測で選んだ画像を使います。左右涙痕を結ぶ線に対して、<strong>垂直距離が下方へ最大となる坐骨輪郭点</strong>を左右それぞれ指定し、恥骨結合は<strong>上縁</strong>に打点してください。最大点の自動検出ではありません。</p>
+<p>PSTI は坐骨間線から恥骨結合上縁への垂直距離（上方を正）です。涙痕間線は坐骨点の選択基準で、PSTIの距離基準とは区別します。旧「恥骨結合」点は流用せず上縁を新たに指定します。</p>
+<p><label for="pstiPhotoResearchId">研究ID（患者氏名は入力しない）</label><input id="pstiPhotoResearchId" maxlength="128" autocomplete="off">
+<label for="pstiPhotoDate">撮影日</label><input id="pstiPhotoDate" type="date">
+<label for="pstiPhotoPosture">撮影姿勢</label><select id="pstiPhotoPosture"><option value="unknown">未確認</option><option value="supine">仰臥位</option><option value="standing">立位</option><option value="other">その他</option></select></p>
+<p id="pstiPhotoGuide" role="status"></p><div id="pstiPhotoPointButtons" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+<p><button type="button" id="pstiPhotoZoomIn">拡大</button> <button type="button" id="pstiPhotoZoomOut">縮小</button> <button type="button" id="pstiPhotoZoomReset">表示を戻す</button> <button type="button" id="pstiPhotoCancelPlacement">打点をキャンセル</button> <button type="button" id="pstiPhotoClearAll">PSTI点をクリア</button></p>
+<p>点の移動：長押し、または Shift＋ドラッグ。余白のドラッグで表示移動。</p>
+<div style="overflow:hidden"><canvas id="pstiPhotoCanvas" width="800" height="600" style="display:block;touch-action:none;max-width:100%"></canvas></div>
+<label for="pstiPhotoCalibrationSource">校正源</label><select id="pstiPhotoCalibrationSource"><option value="manual">専用の既知長 S1–S2</option><option value="cup">写真計測のカップ外径 A–B</option></select>
+<label for="pstiPhotoKnownLength">S1–S2の実長（mm）</label><input id="pstiPhotoKnownLength" type="number" min="0" step="any">
+<label><input id="pstiPhotoScaleConfirmed" type="checkbox">既知長と画像の端点対応を確認した</label>
+<p id="pstiPhotoCalibrationStatus"></p><p id="pstiPhotoResults" role="status"></p><p id="pstiPhotoWarnings"></p>
+<p>カップによる倍率は骨盤と深さが異なる参考換算です。未校正はpxのみ。経時比較には撮影日・姿勢・校正条件を揃える必要があり、距離差を骨盤後傾角へ自動換算しません。既存の術前仰臥位→立位推定タブへも自動転記しません。</p>
+<p><button id="pstiPhotoExportJson" type="button">JSON保存</button> <button id="pstiPhotoExportCsv" type="button">CSV保存</button></p>
+<p><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6939981/" target="_blank" rel="noopener noreferrer">PSTI距離の原著</a>。本打点規則・画像計測の臨床妥当性は未検証。今回の形式は新規点のみ保存し、旧点の読み込み・再解釈は行いません。</p>
+</details>
+<details id="offsetPanel" class="extra-controls" style="padding:14px;border:1px solid var(--border);border-radius:10px">
         <summary style="cursor:pointer;font-weight:700;color:var(--accent)">Femoral / global offset（2D AP・研究用）</summary>
         <p style="font-size:.8rem;line-height:1.6">上で選択した画像を使います。カップ・脚長差の点とは独立した打点です。<strong>カップ楕円中心は骨頭中心として使用しません。</strong>画像左右は患者の左右と同じとは限りません。</p>
         <label>計測する側 <select id="offsetSide"><option value="imageLeft">画像左</option><option value="imageRight">画像右</option></select></label>
@@ -982,9 +1001,11 @@
 
 </div>
 
+<script src="psti-photo-geometry.js"></script>
 <script src="offset-geometry.js"></script>
 <script src="cup-calibration.js"></script>
 <script src="offset-ui.js"></script>
+<script src="psti-photo-ui.js"></script>
 <script>
 "use strict";
 
@@ -1367,6 +1388,7 @@ function setupCanvasFromImage() {
 function resetPoints() {
 
   if (typeof resetOffsetMeasurements === "function") resetOffsetMeasurements();
+  if (typeof resetPstiPhotoMeasurements === "function") resetPstiPhotoMeasurements();
   if (typeof resetCupCalibration === "function") resetCupCalibration();
 
   cancelPendingPointDrag();
@@ -2519,6 +2541,7 @@ function updateGuide() {
 
 function redraw() {
   if (typeof renderOffsetMeasurements === "function") renderOffsetMeasurements();
+  if (typeof renderPstiPhotoMeasurements === "function") renderPstiPhotoMeasurements();
   updateLengthMeasurements();
   renderPointLoupe();
 

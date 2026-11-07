@@ -23,7 +23,7 @@ function cupCalibrationResult(){
   document.getElementById('cupCalibrationStatus').textContent='A–B: '+diameterText+' ｜ '+result.status+(result.mmPerPx===null?'':' ｜ '+result.mmPerPx.toFixed(5)+' mm/px');
   return result;
 }
-function refreshCalibrationOutputs(){updateLengthMeasurements();renderOffsetMeasurements();}
+function refreshCalibrationOutputs(){updateLengthMeasurements();renderOffsetMeasurements();if(typeof renderPstiPhotoMeasurements==='function')renderPstiPhotoMeasurements();}
 document.getElementById('cupOuterDiameter').addEventListener('input',()=>{
   document.getElementById('cupCalibrationConfirmed').checked=false;cupCalibrationState.confirmedSignature=null;refreshCalibrationOutputs();
 });
