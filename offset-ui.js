@@ -41,9 +41,16 @@ function offsetEnd(e){
   if(e.type==='pointerup'&&g.kind==='place'&&!g.moved&&imageLoaded){offsetState.points[g.key]=offsetClamp(offsetToImage(e));offsetMarkChanged(g.key);offsetState.target=null;}
   offsetState.gesture=null;renderOffsetMeasurements();
 }
+function fitOffsetCanvas(){
+  const c=offsetEl('offsetCanvas');
+  if(!c.parentElement||!c.parentElement.clientWidth||typeof window==='undefined')return;
+  const displayScale=Math.min((c.parentElement.clientWidth-28)/c.width,window.innerHeight*.58/c.height);
+  if(displayScale>0){c.style.width=c.width*displayScale+'px';c.style.height=c.height*displayScale+'px';c.style.margin='0 auto';}
+}
 function renderOffsetMeasurements(){
   const c=offsetEl('offsetCanvas');if(!c)return;
   if(c.width!==canvas.width||c.height!==canvas.height){c.width=canvas.width;c.height=canvas.height;}
+  fitOffsetCanvas();
   const context=c.getContext('2d'),p=offsetState.points,r=offsetResult(offsetState.side),cal=offsetScale();
   context.setTransform(1,0,0,1,0,0);context.clearRect(0,0,c.width,c.height);context.fillStyle='#020617';context.fillRect(0,0,c.width,c.height);
   const buttons=offsetEl('offsetPointButtons');
@@ -109,6 +116,7 @@ function renderOffsetMeasurements(){
   offsetEl('offsetZoomIn').addEventListener('click',()=>zoom(1.5));offsetEl('offsetZoomOut').addEventListener('click',()=>zoom(1/1.5));
   offsetEl('offsetZoomReset').addEventListener('click',()=>{offsetCancelGesture();offsetState.zoom=1;offsetState.panX=offsetState.panY=0;renderOffsetMeasurements();});
   offsetEl('offsetPanel').addEventListener('toggle',()=>{if(offsetEl('offsetPanel').open)renderOffsetMeasurements();else offsetCancelGesture();});
+  if(typeof window!=='undefined')window.addEventListener('resize',renderOffsetMeasurements);
   function save(text,type,extension){if(!imageLoaded)return;const url=URL.createObjectURL(new Blob([text],{type})),a=document.createElement('a');a.href=url;a.download='THA_2D_offset_'+new Date().toISOString().replace(/[:.]/g,'-')+'.'+extension;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
   offsetEl('offsetExportJson').addEventListener('click',()=>save(JSON.stringify({schema:'tha-ap-offset-v1',researchOnly:true,coordinateSystem:'resized_image_pixels',imageSize:{width:canvas.width,height:canvas.height},method:'FO: perpendicular to shaft; AO: inferior bony teardrop point, interteardrop baseline; GO: FO+AO',points:offsetState.points,manualCalibration:{knownMm:offsetEl('offsetKnownLength').value,confirmed:offsetEl('offsetScaleConfirmed').checked},calibration:offsetScale(),cupCalibration:cupCalibrationResult(),results:{imageLeft:offsetResult('imageLeft'),imageRight:offsetResult('imageRight')}},null,2),'application/json','json'));
   offsetEl('offsetExportCsv').addEventListener('click',()=>{const keys=['femoralPx','acetabularPx','globalPx','femoralMm','acetabularMm','globalMm'];const rows=[['schema','researchOnly','reference','globalDefinition','coordinateSystem','imageSide',...keys,'calibrationSource','knownMm','mmPerPx','calibrationWarning','errors','warnings'],...['imageLeft','imageRight'].map(side=>{const r=offsetResult(side);return ['tha-ap-offset-v1',true,'inferior bony teardrop point / interteardrop baseline','FO + teardrop-based AO','resized_image_pixels',side,...keys.map(k=>r[k]),offsetScale().source,offsetScale().knownMm,offsetScale().mmPerPx,offsetScale().uncertainty||'',r.errors.join(' / '),r.warnings.join(' / ')];})];save('\ufeff'+rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n'),'text/csv;charset=utf-8','csv');});
