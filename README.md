@@ -100,3 +100,10 @@ assets/PSTI_measurement_original.png：Kobayashi et al., Bone Jt Open 2026;7:128
 
 検証：`node tests/psti-photo.test.cjs`、`node tests/psti-photo-ui.test.cjs`。
 実ブラウザ用：`node tests/psti-photo-browser.test.cjs`（今回の環境では Chromium の socket 作成制限で起動失敗。DOM doubles の合格は実ブラウザ合格ではありません）。
+
+## Research record card (unpublished draft, 2026-11-15)
+Simulator-only research ID, date, provenance and source values can be recorded alongside planned angles. PSTI raw millimetres (one or three values per posture), 3D CT visual estimates in degrees, SA method and sign/reference conditions are kept distinct from the entered delta PT. No automatic transfer from other panels or automatic conversion is added. Existing angle calculations are unchanged.
+
+The card includes the planned ellipse for manual screenshots. JSON downloads store only the explicit research fields and planned values; loading validates fields and recomputes results, with a replacement confirmation. Changing an established study ID clears this record and simulator inputs after confirmation. Other measurement panels remain independent and are not exported by this card. No localStorage, autosave, cloud transmission or cross-device sync is added. Downloaded JSON must be retained by the user; the app cannot verify the operating system completed saving. Never enter direct patient identifiers, including in free text.
+
+Deploy `research-records.js` and `research-records-ui.js` alongside index.html. Tests: `node tests/research-records.test.cjs` and `node tests/research-records-ui.test.cjs`. Existing 10 non-browser suites pass, including 210 geometry conditions. Browser visual/touch validation remains unverified: Chromium launch is blocked by this environment's socket permissions. Not published or clinically validated.

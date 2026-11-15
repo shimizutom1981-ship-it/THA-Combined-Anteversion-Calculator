@@ -1,0 +1,6 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert/strict'),api=require('../research-records.js');
+const html=fs.readFileSync(require('path').join(__dirname,'../index.html'),'utf8'),ctx=vm.createContext({});vm.runInContext(html.slice(html.indexOf('function cupAxisFromRadiographic'),html.indexOf('function updateSim()')),ctx);
+const raw={researchId:'FCO-001',date:'2026-11-15',side:'right',stage:'preop',source:'combined',saMethod:'CT estimate',pstiSupine:'1,2,3',pstiStanding:'11,12,13',ctSupine:'0',ctStanding:'',conditions:'APP posterior positive estimated',stem:'20',delta:'10',inclination:'40'};
+const r=api.create(raw,ctx.calculateMidpointCup);assert.ok(Math.abs(r.planned.supineRA-19.43395799)<1e-7);r.planned.supineRA=999;assert.ok(api.read(JSON.stringify(r),ctx.calculateMidpointCup).planned.supineRA<20);
+for(const [k,v] of [['researchId','123456'],['source',''],['stem',''],['ctSupine','NaN'],['pstiSupine','1,2'],['conditions',''],['side','unknown']])assert.throws(()=>api.create({...raw,[k]:v},ctx.calculateMidpointCup));
+assert.throws(()=>api.read('{"schema":"other"}',ctx.calculateMidpointCup));assert.throws(()=>api.read('x'.repeat(30001),ctx.calculateMidpointCup));console.log('PASS research records: round trip, recomputation, ID/enum/source/number/size validation');
